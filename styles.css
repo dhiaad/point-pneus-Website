@@ -23,6 +23,9 @@
 
 * { box-sizing: border-box; }
 
+/* Un élément masqué reste masqué, même si un style lui donne un affichage */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 
 body {
