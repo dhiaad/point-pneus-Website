@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Espace garage | Point Pneus Guerido</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="assets/logo/icone.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css?v=20261107f">
+  <link rel="stylesheet" href="reservation.css?v=20261107e">
+  <link rel="stylesheet" href="garage.css?v=20261107e">
+</head>
+<body class="garage-page">
+  <main class="wrap garage">
+    <header class="garage-head">
+      <h1>Espace <em>garage</em></h1>
+      <p class="demo-banner" id="demo-banner" hidden><strong>Démo :</strong> ce sont les réservations faites dans ce navigateur.</p>
+      <div class="garage-user" id="garage-user" hidden>
+        <span id="admin-email"></span>
+        <button class="text-btn" type="button" id="admin-signout">Se déconnecter</button>
+      </div>
+    </header>
+
+    <section class="panel-box" id="login" hidden>
+      <h2>Connexion</h2>
+      <p class="step-lead">Réservé au personnel du garage.</p>
+      <button class="btn btn-google" type="button" id="admin-google">Continuer avec Google</button>
+      <form class="email-login-form" id="admin-email-form" novalidate>
+        <label class="field"><span>Ou recevoir un lien par e-mail</span><input id="admin-email-input" type="email" autocomplete="email"></label>
+        <button class="btn btn-outline" type="submit">Envoyer le lien</button>
+        <small class="form-hint" id="admin-email-msg" aria-live="polite"></small>
+      </form>
+    </section>
+
+    <section class="panel-box" id="denied" hidden>
+      <h2>Accès refusé</h2>
+      <p class="step-lead">Ce compte n'a pas l'accès garage. Voir le guide d'installation, étape « Donner l'accès garage ».</p>
+    </section>
+
+    <div id="dashboard" hidden>
+      <section class="panel-box">
+        <div class="list-head">
+          <h2>Rendez-vous</h2>
+          <div class="pills range" role="radiogroup" aria-label="Période">
+            <label><input type="radio" name="range" value="7" checked><span>7 jours</span></label>
+            <label><input type="radio" name="range" value="30"><span>30 jours</span></label>
+          </div>
+        </div>
+        <div id="bookings" aria-live="polite"></div>
+      </section>
+
+      <section class="panel-box">
+        <h2>Demandes de devis</h2>
+        <div id="quotes" aria-live="polite"></div>
+      </section>
+
+      <section class="panel-box">
+        <h2>Bloquer un créneau</h2>
+        <p class="step-lead">Congés, formation, atelier plein : plus personne ne pourra réserver sur cette période.</p>
+        <form class="block-form" id="block-form" novalidate>
+          <label class="field"><span>Jour</span><input id="b-day" type="date" required></label>
+          <label class="field"><span>De</span><input id="b-from" type="time" value="08:00" step="1800" required></label>
+          <label class="field"><span>À</span><input id="b-to" type="time" value="18:30" step="1800" required></label>
+          <label class="field"><span>Motif <small>(pour vous)</small></span><input id="b-reason" type="text" maxlength="80" placeholder="Congés"></label>
+          <button class="btn btn-yellow" type="submit">Bloquer</button>
+        </form>
+        <small class="error" id="block-error" hidden></small>
+        <ul class="blocks" id="blocks"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="booking-config.js?v=20261107e"></script>
+  <script src="booking-api.js?v=20261107e"></script>
+  <script src="garage.js?v=20261107e"></script>
+</body>
+</html>
