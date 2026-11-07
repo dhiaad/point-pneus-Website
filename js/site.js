@@ -13,6 +13,17 @@ const motion = root.classList.contains("motion");
 /* ---------- Ce qui marche partout (même sans 3D) ---------- */
 $("year").textContent = String(new Date().getFullYear());
 
+// Plaque du dock : mise en forme AB-123-CD pendant la saisie, puis envoi vers reserver.html?plaque=…
+const dockPlate = $("dock-plate-input");
+dockPlate?.addEventListener("input", () => {
+  const raw = dockPlate.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (/^[A-Z]{2}\d{0,3}[A-Z]{0,2}$/.test(raw) && raw.length > 2) {
+    dockPlate.value = raw.slice(0, 2) + "-" + raw.slice(2, 5) + (raw.length > 5 ? "-" + raw.slice(5, 7) : "");
+  } else if (dockPlate.value !== dockPlate.value.toUpperCase()) {
+    dockPlate.value = dockPlate.value.toUpperCase();
+  }
+});
+
 function parisNow() {
   const parts = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
   const get = (t) => parts.find((p) => p.type === t)?.value ?? "";

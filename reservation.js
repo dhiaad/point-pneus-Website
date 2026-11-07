@@ -36,10 +36,21 @@
   const save = () => store("session", STATE_KEY, state);
 
   // Préremplissage depuis le site : reserver.html?prestation=pneus&taille=205/55R16&saison=Hiver
+  // ou reserver.html?plaque=AB-123-CD (la plaque tapée en bas de l'accueil)
+  let autoPlate = "", plateFromHome = false;
   (function fromUrl() {
     const q = new URLSearchParams(location.search);
     const id = q.get("prestation");
-    if (id && state.done) { const keep = state.customer; state = fresh(); state.customer = keep; }
+    const plate = P.normalize(q.get("plaque") || "");
+    if ((id || plate) && state.done) { const keep = state.customer; state = fresh(); state.customer = keep; }
+    if (plate) {
+      plateFromHome = true;
+      if (plate !== state.plate || !state.vehicle || state.manual) {
+        Object.assign(state, { plate: "", vehicle: null, manual: false, day: null, slot: null });
+        autoPlate = plate;
+      }
+      state.step = 1;
+    }
     if (id && SERVICES.has(id)) {
       if (state.picked[id]) delete state.picked[id];
       state.picked[id] = defaultsFor(SERVICES.get(id));
@@ -173,6 +184,7 @@
       save();
       renderVehicle();
       showError("s1-error", "");
+      if (autoPlate) { autoPlate = ""; showStep(2); }
     } catch (err) {
       const msg = {
         plate_not_found: "Nous n'avons pas trouvé ce véhicule. Vérifiez la plaque, ou indiquez la marque et le modèle.",
@@ -180,6 +192,7 @@
       }[err.code] || "La recherche ne répond pas pour le moment. Indiquez la marque et le modèle à la place.";
       showError("plate-error", msg);
       if (err.code !== "too_many") openManual();
+      autoPlate = "";
     } finally {
       btn.disabled = false;
       btn.textContent = "Rechercher";
@@ -680,4 +693,11 @@
   if (location.search) history.replaceState(null, "", location.pathname);
   showStep(state.done ? 5 : state.step || 1, false);
   if (ret === "mes-rdv") openMyBookings();
+  // Plaque venue de l'accueil : on cherche le véhicule puis on passe aux prestations
+  if (autoPlate) {
+    plateInput.value = P.format(autoPlate);
+    $("plate-form").requestSubmit();
+  } else if (plateFromHome && state.vehicle && state.step === 1) {
+    showStep(2, false);
+  }
 })();
