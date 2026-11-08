@@ -10,7 +10,7 @@ function plateTexture() {
   const c = document.createElement("canvas"); c.width = 1024; c.height = 224;
   const g = c.getContext("2d");
   g.fillStyle = "#f4f2ec"; g.fillRect(0, 0, 1024, 224);
-  g.fillStyle = "#1d3c9a"; g.fillRect(0, 0, 96, 224); g.fillRect(928, 0, 96, 224);
+  g.fillStyle = "#6d28d9"; g.fillRect(0, 0, 96, 224); g.fillRect(928, 0, 96, 224);
   g.fillStyle = "#111"; g.font = "800 150px Archivo, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
   if ("fontStretch" in g) g.fontStretch = "semi-expanded";
   g.fillText("PP-066-CB", 512, 120);
@@ -72,9 +72,11 @@ export async function loadCar(url, { variant = "Torched Graphite", onProgress } 
 }
 
 // Plan technique : arêtes vives de chaque pièce, en traits fins.
-export function buildBlueprint(model, { color = 0x2b2622, opacity = 0.8, threshold = 28 } = {}) {
+// Les pièces qui correspondent à `glow` (les feux) sont tracées dans une couleur lumineuse, en additif.
+export function buildBlueprint(model, { color = 0x2b2622, opacity = 0.8, threshold = 28, glow = null, glowColor = 0xb794ff } = {}) {
   const lines = new THREE.Group();
   const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
+  const glowMat = new THREE.LineBasicMaterial({ color: glowColor, transparent: true, opacity: 1, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending });
   model.updateMatrixWorld(true);
   const meshes = [];
   model.traverse((o) => { if (o.isMesh && o.visible) meshes.push(o); });
@@ -84,13 +86,15 @@ export function buildBlueprint(model, { color = 0x2b2622, opacity = 0.8, thresho
       const until = performance.now() + 12;
       while (i < meshes.length && performance.now() < until) {
         const m = meshes[i++];
-        const edges = new THREE.EdgesGeometry(m.geometry, threshold);
-        const seg = new THREE.LineSegments(edges, mat);
+        const lit = glow && (glow.test(m.name) || glow.test(m.parent?.name || ""));
+        const edges = new THREE.EdgesGeometry(m.geometry, lit ? 12 : threshold);
+        const seg = new THREE.LineSegments(edges, lit ? glowMat : mat);
+        if (lit) seg.renderOrder = 2;
         seg.matrixAutoUpdate = false;
         seg.matrix.copy(m.matrixWorld);
         lines.add(seg);
       }
-      if (i < meshes.length) setTimeout(step, 0); else resolve({ lines, material: mat });
+      if (i < meshes.length) setTimeout(step, 0); else resolve({ lines, material: mat, glowMaterial: glowMat });
     };
     step();
   });

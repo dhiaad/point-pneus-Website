@@ -17,8 +17,44 @@ const cubic = (p0, p1, p2, p3, t) => {
 };
 const band = (x, c, hw) => 1 - smooth(hw * 0.7, hw, Math.abs(x - c));
 
+// Sculptures de la boutique : hiver, 4 saisons, sport, compétition, drift (le motif « touring » reste celui de l'accueil).
+const slot = (ph, w) => { const f = ph - Math.floor(ph); return 1 - smooth(w * 0.7, w, Math.abs(f - 0.5)); };
+const PATTERNS = {
+  winter(theta, zn) {
+    const a = Math.abs(zn), side = zn >= 0 ? 1 : -1, u = theta * PITCH / TAU;
+    let g = Math.max(band(a, 0.2, 0.05), band(a, 0.58, 0.05));
+    g = Math.max(g, slot(u + side * 0.35 * a, 0.09) * smooth(0.05, 0.12, a));           // blocs en chevrons
+    g = Math.max(g, slot(u * 3 + side * 0.8 * a + 0.25, 0.035) * 0.75 * (1 - smooth(0.9, 0.98, a))); // lamelles fines
+    return g;
+  },
+  allseason(theta, zn) {
+    const a = Math.abs(zn), u = theta * PITCH / TAU;
+    return Math.max(slot(u + 0.9 * a, 0.08) * smooth(0.06, 0.12, a), slot(u * 2 + 1.6 * a, 0.03) * 0.6 * smooth(0.2, 0.3, a));
+  },
+  sport(theta, zn) {
+    const u = theta * PITCH / TAU;
+    let g = Math.max(band(zn, 0.32, 0.065), band(zn, -0.06, 0.06), band(zn, -0.46, 0.055));
+    if (zn > 0.62) g = Math.max(g, slot(u + 0.3 * zn, 0.07) * smooth(0.66, 0.74, zn));
+    if (zn < -0.62) g = Math.max(g, slot(u * 0.5, 0.05) * smooth(0.7, 0.8, -zn));
+    return g;
+  },
+  slick(theta, zn) {
+    const u = theta * PITCH / TAU, a = Math.abs(zn);
+    let g = Math.max(band(zn, 0.42, 0.035), band(zn, -0.42, 0.035));
+    if (a > 0.8) g = Math.max(g, slot(u * 0.5, 0.05) * smooth(0.82, 0.9, a) * 0.8);
+    return g;
+  },
+  drift(theta, zn) {
+    const u = theta * PITCH / TAU, a = Math.abs(zn);
+    let g = band(zn, 0, 0.04);
+    if (a > 0.18 && a < 0.8) g = Math.max(g, slot(u * 0.5 + 0.7 * zn, 0.06) * smooth(0.18, 0.26, a) * (1 - smooth(0.72, 0.8, a)));
+    return g;
+  },
+};
+
 // Sculpture de la bande de roulement : 4 rainures longitudinales, épaules en lamelles, motif directionnel en V.
-function treadDepth(theta, zn) {
+function treadDepth(theta, zn, pattern) {
+  if (pattern && PATTERNS[pattern]) return PATTERNS[pattern](theta, zn);
   const a = Math.abs(zn);
   const side = zn >= 0 ? 1 : -1;
   let g = Math.max(band(a, 0.22, 0.06), band(a, 0.63, 0.055));
@@ -136,7 +172,7 @@ function revolve(rows, cols, { displace, uv, colorOf, flipU = false }) {
 }
 
 // --- Textures du flanc --------------------------------------------------------------------
-function sidewallTextures(casing, size) {
+function sidewallTextures(casing, size, { paint: brandPaint = "#f2c400", label = "205/55 R16 91V", line = "GUERIDO  ·  CABESTANY", brand = "POINT PNEUS" } = {}) {
   const W = size, H = size / 2;
   const make = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
   const bump = make(), color = make(), rough = make();
@@ -207,13 +243,13 @@ function sidewallTextures(casing, size) {
     draw(r, paint ? "rgb(0,110,0)" : "rgb(0,170,0)", 0);
     if (paint) draw(c, paint, 0);
   };
-  const yellow = "#f2c400";
-  text("POINT PNEUS", 0.75, 0.835, 0.074, { paint: yellow, spacing: 0.04 });
-  text("POINT PNEUS", 0.25, 0.835, 0.074, { paint: yellow, spacing: 0.04 });
-  text("GUERIDO  ·  CABESTANY", 0.75, 0.772, 0.026, { weight: 700, spacing: 0.18 });
-  text("GUERIDO  ·  CABESTANY", 0.25, 0.772, 0.026, { weight: 700, spacing: 0.18 });
-  text("205/55 R16 91V", 0.0, 0.83, 0.058, { weight: 800 });
-  text("205/55 R16 91V", 0.5, 0.83, 0.058, { weight: 800 });
+  const yellow = brandPaint;
+  text(brand, 0.75, 0.835, 0.074, { paint: yellow, spacing: 0.04 });
+  text(brand, 0.25, 0.835, 0.074, { paint: yellow, spacing: 0.04 });
+  text(line, 0.75, 0.772, 0.026, { weight: 700, spacing: 0.18 });
+  text(line, 0.25, 0.772, 0.026, { weight: 700, spacing: 0.18 });
+  text(label, 0.0, 0.83, 0.058, { weight: 800 });
+  text(label, 0.5, 0.83, 0.058, { weight: 800 });
   text("TUBELESS   RADIAL", 0.585, 0.862, 0.024, { weight: 700, spacing: 0.12 });
   text("TUBELESS   RADIAL", 0.085, 0.862, 0.024, { weight: 700, spacing: 0.12 });
   text("M+S", 0.915, 0.84, 0.04, { weight: 800 });
@@ -259,7 +295,7 @@ function treadBumpTexture(size) {
   return t;
 }
 
-export function buildTire({ quality = 1, textureSize = 4096 } = {}) {
+export function buildTire({ quality = 1, textureSize = 4096, pattern = null, paint, label, line, brand } = {}) {
   const q = quality;
   const cols = Math.round(2560 * q);
   const casingCols = Math.round(720 * q);
@@ -270,7 +306,7 @@ export function buildTire({ quality = 1, textureSize = 4096 } = {}) {
   const bandRows = [...mirror, ...half];
   bandRows.forEach((row, i) => { row.v = i / (bandRows.length - 1); });
   const bandGeo = revolve(bandRows, cols, {
-    displace: (theta, row) => -DEPTH * treadDepth(theta, row.zn) * row.w,
+    displace: (theta, row) => -DEPTH * treadDepth(theta, row.zn, pattern) * row.w,
     uv: (row) => row.v,
     colorOf: (d) => 1 - 0.62 * (-d / DEPTH),
   });
@@ -281,7 +317,7 @@ export function buildTire({ quality = 1, textureSize = 4096 } = {}) {
   const backRows = casing.rows.map((p) => ({ ...p, z: -p.z }));
   const back = revolve(backRows, casingCols, { uv: (row) => row.v, flipU: true });
 
-  const maps = sidewallTextures(casing, textureSize);
+  const maps = sidewallTextures(casing, textureSize, { paint, label, line, brand });
   const treadBump = treadBumpTexture(Math.min(4096, textureSize));
 
   // Le caoutchouc est éclairé surtout par l'environnement : noir profond, reflets satinés.

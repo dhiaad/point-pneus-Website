@@ -57,6 +57,8 @@
       const size = (q.get("taille") || "").match(/^(\d{3})\/(\d{2})\s*R?(\d{2})$/i);
       if (size && id === "pneus") state.picked.pneus.size = `${size[1]}/${size[2]} R${size[3]}`;
       if (q.get("saison") && id === "pneus") state.picked.pneus.season = q.get("saison");
+      const qty = Number(q.get("qte"));
+      if ([1, 2, 4].includes(qty) && id === "pneus") state.picked.pneus.qty = qty;
     }
   })();
 

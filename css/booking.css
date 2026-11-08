@@ -198,9 +198,9 @@ button, input, select, textarea { font: inherit; }
 }
 .plate-eu {
   flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-  width: 38px; padding-bottom: 8px; background: #1d4fd8; color: #fff; font-weight: 700; font-size: 15px; line-height: 1;
+  width: 38px; padding-bottom: 8px; background: linear-gradient(180deg, #7c3aed, #5b21b6); color: #fff; font-weight: 700; font-size: 15px; line-height: 1;
 }
-.plate-eu i { width: 16px; height: 16px; margin-bottom: auto; margin-top: 8px; border: 2px dotted var(--signal); border-radius: 50%; }
+.plate-eu i { width: 16px; height: 16px; margin-bottom: auto; margin-top: 8px; border-radius: 50%; background: radial-gradient(circle, transparent 5px, var(--signal) 5.4px 6.6px, transparent 7px); }
 .plate-input input {
   flex: 1; min-width: 0; border: 0; padding: 0 12px; background: transparent; color: var(--ink);
   font-family: var(--display); font-stretch: 112%; font-weight: 600;
@@ -420,3 +420,15 @@ button, input, select, textarea { font: inherit; }
   .opt b { grid-column: 2; }
   .done-actions .btn { width: 100%; }
 }
+
+/* ---------- Tout ce qui se clique s'allume en jaune ---------- */
+.btn-yellow:hover, .btn-outline:hover, .header-account:hover, .btn-google:hover {
+  background: var(--signal); border-color: var(--signal); color: var(--ink);
+  box-shadow: 0 8px 26px -6px rgba(255, 214, 0, 0.65);
+}
+.bk-right a:hover, .bk-back:hover, .text-btn:hover, .bk-foot a:hover {
+  color: var(--ink); text-decoration: none;
+  background: linear-gradient(transparent 58%, rgba(255, 214, 0, 0.9) 58%);
+}
+.svc:hover, .day:hover, .time:hover, .pills label:hover span { border-color: #e0bb00; box-shadow: 0 0 0 3px rgba(255, 214, 0, 0.35); }
+.vehicle-card .text-btn:hover { color: var(--signal); background: none; }
