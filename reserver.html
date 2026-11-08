@@ -3,18 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4f1eb">
+  <meta name="theme-color" content="#0a090c">
   <title>Prendre rendez-vous | Point Pneus Guerido, Cabestany</title>
-  <meta name="description" content="Réservez en ligne votre rendez-vous pneus, crevaison, géométrie, climatisation ou mécanique chez Point Pneus Guerido à Cabestany. Paiement au garage.">
+  <meta name="description" content="Réservez en ligne votre rendez-vous pneus, crevaison, géométrie, climatisation ou mécanique à Cabestany. Paiement au garage.">
   <link rel="canonical" href="https://www.point-pneus-guerido.com/reserver.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="Point Pneus Guerido">
+  <meta property="og:title" content="Prendre rendez-vous · Point Pneus Guerido, Cabestany">
+  <meta property="og:description" content="Réservez en ligne votre rendez-vous pneus, crevaison, géométrie, climatisation ou mécanique. Paiement au garage.">
+  <meta property="og:url" content="https://www.point-pneus-guerido.com/reserver.html">
+  <meta property="og:image" content="https://www.point-pneus-guerido.com/assets/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Point Pneus Guerido, pneus et garage à Cabestany">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.point-pneus-guerido.com/assets/og-image.jpg">
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" href="assets/logo/icone.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
   <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/booking.css?v=4">
+  <link rel="stylesheet" href="css/kit.css?v=10">
+  <link rel="stylesheet" href="css/booking.css?v=7">
 </head>
 <body class="booking-page">
+  <a class="skip" href="#contenu">Aller au contenu</a>
   <header class="bk-hdr">
     <a class="bk-back" href="index.html">Retour au site</a>
     <a class="bk-logo" href="index.html" aria-label="Point Pneus Guerido, accueil">
@@ -29,7 +43,7 @@
   <main class="booking wrap" id="contenu">
     <div class="booking-head">
       <p class="eyebrow">En ligne · paiement au garage</p>
-      <h1>Prendre <em>rendez-vous</em></h1>
+      <h1 class="display">Prendre<br>rendez-vous<span class="pt">.</span></h1>
       <p class="demo-banner" id="demo-banner" hidden><strong>Démo :</strong> véhicules fictifs, rien n'est envoyé au garage.</p>
       <p class="urgent">Crevaison, voiture immobilisée ? <a href="tel:+33468505068">Appelez le 04 68 50 50 68</a>, c'est plus rapide.</p>
     </div>
@@ -125,12 +139,13 @@
           </div>
 
           <form class="form-group contact-form" id="contact-form" novalidate>
-            <label class="field"><span>Prénom et nom</span><input id="c-name" type="text" autocomplete="name" required><small class="error" hidden>Indiquez votre nom.</small></label>
+            <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Votre site web<input name="website" tabindex="-1" autocomplete="off"></label></div>
+            <label class="field"><span>Prénom et nom</span><input id="c-name" type="text" autocomplete="name" required maxlength="100"><small class="error" hidden>Indiquez votre nom.</small></label>
             <div class="row">
-              <label class="field"><span>Téléphone</span><input id="c-phone" type="tel" autocomplete="tel" inputmode="tel" required><small class="error" hidden>Indiquez un numéro valide, ex. 06 12 34 56 78.</small></label>
-              <label class="field"><span>E-mail <small>(pour la confirmation)</small></span><input id="c-email" type="email" autocomplete="email" inputmode="email"><small class="error" hidden>Cette adresse e-mail semble incomplète.</small></label>
+              <label class="field"><span>Téléphone</span><input id="c-phone" type="tel" autocomplete="tel" inputmode="tel" required maxlength="20"><small class="error" hidden>Indiquez un numéro valide, ex. 06 12 34 56 78.</small></label>
+              <label class="field"><span>E-mail <small>(pour la confirmation)</small></span><input id="c-email" type="email" autocomplete="email" inputmode="email" maxlength="254"><small class="error" hidden>Cette adresse e-mail semble incomplète.</small></label>
             </div>
-            <label class="field"><span>Un détail à nous dire ? <small>(facultatif)</small></span><textarea id="c-note" rows="2" placeholder="Pneu à plat à l'avant droit, voiture de prêt…"></textarea></label>
+            <label class="field"><span>Un détail à nous dire ? <small>(facultatif)</small></span><textarea id="c-note" rows="2" maxlength="1000" placeholder="Pneu à plat à l'avant droit, voiture de prêt…"></textarea></label>
           </form>
 
           <div class="recap" id="recap"></div>
@@ -146,7 +161,9 @@
           <p class="step-lead" id="done-text"></p>
           <div class="done-actions">
             <a class="btn btn-yellow" id="ics-link" download="rdv-point-pneus.ics">Ajouter à mon agenda</a>
-            <a class="btn btn-outline" href="https://www.google.com/maps/dir/?api=1&amp;destination=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany" rel="noopener">Itinéraire</a>
+            <a class="btn btn-outline" href="https://www.google.com/maps/dir/?api=1&amp;destination=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany" target="_blank" rel="noopener">Google Maps</a>
+            <a class="btn btn-outline" href="https://waze.com/ul?q=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany&amp;navigate=yes" target="_blank" rel="noopener">Waze</a>
+            <a class="btn btn-outline" href="https://maps.apple.com/?daddr=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany&amp;dirflg=d" target="_blank" rel="noopener">Plans</a>
             <a class="btn btn-outline" href="tel:+33468505068">Appeler le garage</a>
           </div>
           <button class="text-btn" type="button" id="new-booking">Prendre un autre rendez-vous</button>
@@ -172,22 +189,26 @@
   </main>
 
   <dialog class="sheet" id="my-bookings" aria-labelledby="mb-title">
-    <div class="sheet-head">
-      <h2 id="mb-title">Mes rendez-vous</h2>
-      <button class="sheet-close" type="button" id="mb-close" aria-label="Fermer">×</button>
+    <div class="sheet-panel">
+      <div class="sheet-head">
+        <h2 id="mb-title">Mes rendez-vous</h2>
+        <button class="sheet-x" type="button" id="mb-close" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+      </div>
+      <div class="sheet-body" id="mb-body"></div>
     </div>
-    <div id="mb-body"></div>
   </dialog>
 
   <footer class="bk-foot">
     <div class="wrap bk-foot-inner">
       <p>© 2026 Point Pneus Guerido · 9 Rue Henri Becquerel, 66330 Cabestany</p>
-      <p class="footer-links"><a href="mentions-legales.html">Mentions légales</a> <a href="confidentialite.html">Vos données</a></p>
+      <p class="footer-links"><a href="mentions-legales.html">Mentions légales</a> <a href="confidentialite.html">Vos données</a> <a href="cgu.html">CGU</a> <a href="confidentialite.html#cookies" data-consent>Cookies</a></p>
     </div>
   </footer>
 
-  <script src="booking-config.js?v=20261107e"></script>
-  <script src="booking-api.js?v=20261107e"></script>
+  <script src="booking-config.js?v=20261109a"></script>
+  <script src="booking-api.js?v=20261109a"></script>
   <script src="reservation.js?v=20261108a"></script>
+  <script src="js/consent.js?v=1" defer></script>
+  <script type="speculationrules">{"prefetch":[{"where":{"href_matches":"*.html"},"eagerness":"moderate"}]}</script>
 </body>
 </html>

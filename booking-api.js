@@ -109,10 +109,16 @@
 
   function hash(str) { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
 
+  // Plaque de présentation : une vraie voiture, sans publier son immatriculation en clair dans le site.
+  // C4 II phase 2 de 2015 : 205/55 R16 ou 225/45 R17 selon la finition.
+  const DEMO_KNOWN = new Map([[3079777525, { brand: "Citroën", model: "C4 II phase 2", year: 2015, tire: "205/55 R16", tireAlt: ["225/45 R17"] }]]);
+
   const demo = {
     name: "demo",
     async lookupPlate(plate) {
       await wait(650);
+      const known = DEMO_KNOWN.get(hash(plate));
+      if (known) return { ...known };
       return { ...DEMO_CARS[hash(plate) % DEMO_CARS.length], demo: true };
     },
     async getBusy(from, to) {
@@ -193,6 +199,10 @@
       const row = list.find((b) => b.id === id);
       if (row) row.status = status;
       store("local", DEMO_KEY, list);
+    },
+    async adminEvents(days) {
+      const from = new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
+      return (store("local", "pp-demo-events") || []).filter((r) => r.d >= from);
     },
     async adminBlocks() { return store("local", "pp-demo-blocks") || []; },
     async adminBlock(start, end, reason) {
@@ -318,6 +328,12 @@
         const { error } = await sb.from("bookings").update({ status }).eq("id", id);
         check(error, "network");
       },
+      async adminEvents(days) {
+        const sb = await client();
+        const { data, error } = await sb.rpc("admin_events", { p_days: days });
+        check(error, "network");
+        return data || [];
+      },
       async adminBlocks() {
         const sb = await client();
         const { data, error } = await sb.from("blocked_slots").select("*").gte("end_at", new Date().toISOString()).order("start_at");
@@ -339,7 +355,13 @@
 
   const live = cfg.mode === "supabase" && cfg.supabaseUrl && cfg.supabaseAnonKey;
 
+  // Anti-spam côté navigateur : case invisible que seuls les robots remplissent, et envoi trop rapide pour un humain.
+  // La vraie barrière reste côté serveur (limites dans supabase/schema.sql).
+  const bornAt = Date.now();
+  const spam = { suspect: (form) => Boolean(form.elements.website && form.elements.website.value) || Date.now() - bornAt < 2500 };
+
   window.BookingAPI = {
+    spam,
     api: live ? supabaseAdapter() : demo,
     isDemo: !live,
     BookingError,

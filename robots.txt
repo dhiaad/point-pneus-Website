@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /garage.html
+Disallow: /404.html
 
 Sitemap: https://www.point-pneus-guerido.com/sitemap.xml

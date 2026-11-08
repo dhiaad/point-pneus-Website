@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#111014">
-  <title>Pneus neufs et d'occasion à Cabestany, près de Perpignan | Point Pneus Guerido</title>
-  <meta name="description" content="Garage pneus et mécanique à Cabestany, près de Perpignan. Pneus neufs et d'occasion, été, hiver, compétition, drift. Crevaison, géométrie 3D, climatisation, freins, vidange. Rendez-vous en ligne.">
+  <meta name="theme-color" content="#0a090c">
+  <title>Pneus et garage à Cabestany, près de Perpignan | Point Pneus</title>
+  <meta name="description" content="Pneus neufs et d'occasion, crevaison, géométrie 3D, climatisation, freins et vidange à Cabestany, près de Perpignan. Rendez-vous en ligne.">
   <link rel="canonical" href="https://www.point-pneus-guerido.com/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="fr_FR">
@@ -16,14 +16,20 @@
   <meta property="og:image" content="https://www.point-pneus-guerido.com/assets/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Point Pneus Guerido, pneus et garage à Cabestany">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.point-pneus-guerido.com/assets/og-image.jpg">
   <meta name="format-detection" content="telephone=no">
   <script>
     (function () {
       var d = document.documentElement, gl = false;
       try { var c = document.createElement("canvas"); gl = !!(c.getContext("webgl2") || c.getContext("webgl")); } catch (e) {}
       var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      d.className += (gl && !reduce ? " motion" : " static") + " js";
+      var wide = window.matchMedia && matchMedia("(min-width: 900px)").matches;
+      var weak = (navigator.hardwareConcurrency || 8) < 4 || (navigator.deviceMemory || 8) < 4;
+      var motion = gl && !reduce && wide && !weak;
+      d.className += (motion ? " motion" : " static") + " js";
+      if (motion) { var l = document.createElement("link"); l.rel = "preconnect"; l.href = "https://cdn.jsdelivr.net"; l.crossOrigin = ""; document.head.appendChild(l); }
     })();
   </script>
   <link rel="icon" href="favicon.ico" sizes="any">
@@ -31,8 +37,9 @@
   <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
   <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/kit.css?v=2">
-  <link rel="stylesheet" href="css/premium.css?v=6">
+  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="assets/hero/pneu-studio-1024.webp?v=1 1024w, assets/hero/pneu-studio.webp?v=2 2048w" imagesizes="(max-width: 760px) 112vw, 70vw">
+  <link rel="stylesheet" href="css/kit.css?v=10">
+  <link rel="stylesheet" href="css/premium.css?v=24">
   <script type="importmap">
   {
     "imports": {
@@ -61,14 +68,8 @@
   </script>
 </head>
 <body>
-  <a class="skip" href="#garage">Aller au contenu</a>
+  <a class="skip" href="#services">Aller au contenu</a>
 
-  <div class="loader" id="loader" aria-hidden="true">
-    <svg class="loader-mark" viewBox="0 0 200 222" fill="currentColor"><use href="#pp-mark"/></svg>
-    <span class="loader-count"><span id="loader-count">0</span></span>
-  </div>
-
-  <!-- Symbole du logo, réutilisé partout -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="pp-mark" viewBox="0 0 200 222"><path d="M20 4H38V126H20Z"/><path fill-rule="evenodd" d="M33 45A33 43 0 1 0 99 45A33 43 0 1 0 33 45Z M52 45A14 23 0 1 0 80 45A14 23 0 1 0 52 45Z M84.16 39.12L97.33 46.31L94.84 50.88L81.67 43.69Z M84.46 55.01L91.64 68.18L87.08 70.67L79.89 57.5Z M78.89 67.72L77.82 82.68L72.63 82.31L73.71 67.35Z M69.23 73.22L60.24 85.230L56.08 82.11L65.07 70.1Z M58.55 69.76L44.49 75L42.68 70.12L56.73 64.88Z M49.66 27.94L46.48 13.28L51.56 12.18L54.74 26.84Z M57.6 18.45L62.84 4.4L67.71 6.22L62.47 20.27Z M68.2 17.39L80.21 8.41L83.32 12.57L71.31 21.56Z M78.1 25.1L93.07 24.03L93.44 29.22L78.47 30.29Z"/><path d="M14.45 119.790A19 19 0 1 1 10 132L25.37 137.59A6.5 6.5 0 0 0 29.81 125.38Z"/><path d="M106 74H124V196H106Z"/><path fill-rule="evenodd" d="M119 115A33 43 0 1 0 185 115A33 43 0 1 0 119 115Z M138 115A14 23 0 1 0 166 115A14 23 0 1 0 138 115Z M170.16 109.12L183.33 116.31L180.84 120.88L167.67 113.69Z M170.46 125.01L177.64 138.18L173.08 140.67L165.89 127.5Z M164.89 137.72L163.82 152.68L158.63 152.31L159.71 137.35Z M155.23 143.22L146.24 155.23L142.08 152.11L151.07 140.1Z M144.55 139.76L130.49 145L128.68 140.12L142.73 134.88Z M135.66 97.94L132.48 83.28L137.56 82.18L140.74 96.84Z M143.6 88.45L148.84 74.4L153.71 76.22L148.47 90.27Z M154.2 87.39L166.21 78.41L169.32 82.57L157.31 91.56Z M164.1 95.1L179.07 94.03L179.44 99.22L164.47 100.29Z"/><path fill-rule="evenodd" d="M97 204A18 18 0 1 0 133 204A18 18 0 1 0 97 204ZM107 204A8 8 0 1 0 123 204A8 8 0 1 0 107 204Z"/></symbol>
   </svg>
@@ -78,269 +79,319 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 869.76 222" fill="currentColor" aria-hidden="true" focusable="false"><use href="#pp-mark" width="200" height="222"/><g transform="translate(207 72) scale(0.86)"><path d="M0 0H22V100H0Z"/><path fill-rule="evenodd" d="M22 0H40A34 34 0 0 1 40 68H22Z M22 22H40A12 12 0 0 1 40 46H22Z"/><path fill-rule="evenodd" d="M83 50A47 47 0 1 0 177 50A47 47 0 1 0 83 50ZM105 50A25 25 0 1 0 155 50A25 25 0 1 0 105 50Z"/><path d="M186 34H208V100H186Z"/><path d="M185 12A12 12 0 1 0 209 12A12 12 0 1 0 185 12Z"/><path d="M217 100V35A35 35 0 0 1 287 35V100H265V35A13 13 0 0 0 239 35V100Z"/><path d="M296 0H354V22H296Z"/><path d="M304 0H326V64A14 14 0 0 0 340 78H354V100H340A36 36 0 0 1 304 64Z"/><path d="M388 0H410V100H388Z"/><path fill-rule="evenodd" d="M410 0H428A34 34 0 0 1 428 68H410Z M410 22H428A12 12 0 0 1 428 46H410Z"/><path d="M471 100V35A35 35 0 0 1 541 35V100H519V35A13 13 0 0 0 493 35V100Z"/><path d="M616 0H586A36 36 0 0 0 550 36V64A36 36 0 0 0 586 100H616V78H586A14 14 0 0 1 572 64V61H610V39H572V36A14 14 0 0 1 586 22H616Z"/><path d="M625 0H647V65A13 13 0 0 0 673 65V0H695V65A35 35 0 0 1 625 65Z"/><path d="M766 0H730A26 26 0 0 0 704 26V35A26 26 0 0 0 730 61H739A5 5 0 0 1 744 66V73A5 5 0 0 1 739 78H704V100H740A26 26 0 0 0 766 74V65A26 26 0 0 0 740 39H731A5 5 0 0 1 726 34V27A5 5 0 0 1 731 22H766Z"/></g></svg>
     </a>
     <nav class="nav-links" aria-label="Navigation principale">
-      <a href="#garage" data-nav="garage">Le garage</a>
-      <a href="#atelier" data-nav="atelier">L'atelier</a>
       <a href="#services" data-nav="services">Services</a>
-      <a href="pneus.html" data-nav="boutique">Boutique pneus<span class="new">Nouveau</span></a>
-      <button type="button" data-open="reader">Lire son pneu</button>
-      <a href="#infos" data-nav="infos">Infos</a>
+      <a href="pneus.html">Boutique pneus</a>
+      <a href="#atelier" data-nav="atelier">L'atelier</a>
+      <a href="#garage" data-nav="garage">Le garage</a>
+      <a href="#contact" data-nav="contact">Contact</a>
     </nav>
     <div class="nav-right">
-      <button class="nav-live" type="button" data-open="hours" aria-label="Horaires, heure et météo à Cabestany">
-        <span class="live-dot" data-open-dot></span><time data-clock>--:--</time><span class="sep"></span><span class="wx-chip" data-wx-chip hidden></span>
-      </button>
+      <button class="nav-live" type="button" data-open="hours" aria-label="Voir les horaires"><span class="live-dot" data-open-dot></span><span data-open-text>Horaires</span></button>
       <a class="nav-phone" href="tel:+33468505068">04 68 50 50 68</a>
-      <a class="btn btn-light nav-cta" href="reserver.html">Rendez-vous</a>
+      <a class="btn btn-ghost nav-cta" href="reserver.html">Rendez-vous</a>
       <button class="nav-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
     </div>
   </header>
 
   <main id="haut">
-    <!-- 1. Le pneu : on le traverse -->
-    <section class="intro" id="intro" aria-labelledby="intro-title">
-      <div class="intro-stage">
-        <div class="intro-dark" aria-hidden="true"></div>
-        <h1 class="intro-title" id="intro-title">
-          <span class="it-line">Votre garage</span>
-          <span class="it-line">à <em>Perpignan</em></span>
-        </h1>
-        <div class="intro-light" id="intro-light" aria-hidden="true">
-          <div class="through">
-            <svg class="through-logo" viewBox="0 0 200 222" fill="currentColor"><use href="#pp-mark"/></svg>
-            <p class="through-name">Point Pneus <span>Guerido</span></p>
-            <p class="through-tag">Pneus · Géométrie · Clim · Freins · Mécanique</p>
+    <!-- Hero -->
+    <section class="hero" id="intro" aria-labelledby="hero-title">
+      <div class="hero-stage" id="hero-stage" aria-hidden="true">
+        <img class="hero-poster" id="hero-poster" src="assets/hero/pneu-studio.webp?v=2" srcset="assets/hero/pneu-studio-1024.webp?v=1 1024w, assets/hero/pneu-studio.webp?v=2 2048w" sizes="(max-width: 760px) 112vw, 70vw" width="2048" height="2048" alt="" fetchpriority="high">
+        <canvas class="hero-gl" id="gl-tire"></canvas>
+      </div>
+      <div class="wrap hero-main">
+        <form class="hero-plate" action="reserver.html" method="get" aria-label="Aller directement au rendez-vous avec votre plaque">
+          <div class="plate plate-quiet">
+            <span class="plate-eu" aria-hidden="true"><i></i>F</span>
+            <input name="plaque" type="text" placeholder="AB-123-CD" maxlength="12" required autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" data-plate aria-label="Votre plaque d'immatriculation">
+            <button class="plate-go" type="submit" aria-label="Choisir ma prestation"></button>
           </div>
-          <ul class="through-chips">
-            <li>Montage inclus</li><li>Géométrie 3D</li><li>Neuf &amp; occasion</li><li>3 ou 4 fois sans frais</li>
-          </ul>
+          <p>Entrez votre plaque, on retrouve votre voiture</p>
+        </form>
+        <p class="hero-kicker">Pneus et mécanique, à 5 min de Perpignan</p>
+        <h1 class="display hero-title" id="hero-title" data-split>
+          <span class="split-line"><span>Votre garage</span></span>
+          <span class="split-line"><span>à Cabestany<span class="pt">.</span></span></span>
+        </h1>
+        <div class="hero-foot">
+          <p class="hero-lead">Pneus neufs et d'occasion. Montage, équilibrage et valves inclus.</p>
+          <div class="hero-cta" id="hero-cta">
+            <a class="btn btn-violet btn-arrow" href="reserver.html">Prendre rendez-vous</a>
+            <a class="link-arrow hero-call" href="tel:+33468505068"><span class="when-wide">Ou appelez le 04 68 50 50 68</span><span class="when-narrow">Ou appelez le garage</span></a>
+          </div>
         </div>
-        <canvas class="stage-gl" id="gl-tire" aria-hidden="true"></canvas>
-        <div class="intro-copy">
-          <a class="intro-shop" href="pneus.html" data-magnet="0.12">
-            <span class="intro-shop-text">
-              <span class="eyebrow tag">La boutique pneus</span>
-              <span class="intro-shop-lead">Neufs et d'occasion. <br>Été, hiver, 4 saisons, <br><em>compétition et drift.</em></span>
-            </span>
-            <span class="arrow-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-          </a>
-          <ul class="intro-facts">
-            <li><span class="f-label">Montage et équilibrage</span><span class="f-value">Inclus</span></li>
-            <li><span class="f-label">Réparation crevaison</span><span class="f-value">dès 15 €</span></li>
-            <li class="f-hours"><button type="button" data-open="hours"><span class="f-label"><span class="live-dot" data-open-dot></span><span data-open-title>Horaires</span> · lun – ven</span><span class="f-value">8 h – 18 h 30</span></button></li>
-          </ul>
-          <p class="scroll-cue" aria-hidden="true"><span></span>Défilez pour entrer</p>
-        </div>
-        <noscript><p class="noscript">Point Pneus Guerido · 04 68 50 50 68</p></noscript>
+      </div>
+      <div class="wrap hero-facts">
+        <button type="button" data-open="hours"><span class="live-dot" data-open-dot></span><span class="when-wide">Lundi au vendredi, 8 h – 12 h et 14 h – 18 h 30</span><span class="when-narrow" data-open-text>Horaires</span></button>
+        <a href="https://www.google.com/maps/dir/?api=1&amp;destination=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany" data-open="route" target="_blank" rel="noopener">9 Rue Henri Becquerel, 66330 Cabestany</a>
+        <button class="hero-read" type="button" data-open="reader">205/55 R16 ? <span>Lire son pneu</span></button>
       </div>
     </section>
 
-    <!-- 2. Le garage -->
-    <div class="pw"><section class="page about" id="garage" aria-labelledby="about-title">
-      <div class="about-glow" aria-hidden="true"></div>
-      <div class="wrap about-grid">
-        <div class="about-copy">
-          <p class="eyebrow tag">Le garage · Cabestany, Perpignan</p>
-          <h2 class="display about-title" id="about-title" data-reveal><span class="split-line"><span>Le pneu,</span></span><span class="split-line"><span>sans <em>détour.</em></span></span></h2>
-          <p class="about-lead" data-reveal>Un garage indépendant à deux pas de Perpignan. Vous dites ce qui ne va pas, on vous donne un prix clair, et vous repartez. Montage, équilibrage et valves sont toujours inclus.</p>
-          <div class="about-cta" data-reveal>
-            <a class="btn btn-light btn-arrow" href="reserver.html" data-magnet="0.2">Prendre rendez-vous</a>
-            <a class="link-arrow" href="tel:+33468505068">04 68 50 50 68</a>
+    <!-- Services -->
+    <section class="services" id="services" aria-labelledby="services-title">
+      <div class="wrap">
+        <header class="sv-head">
+          <div>
+            <p class="eyebrow tag">Services</p>
+            <h2 class="display sec-title" id="services-title" data-split><span class="split-line"><span>Du pneu</span></span><span class="split-line"><span>au moteur<span class="pt">.</span></span></span></h2>
+          </div>
+          <p class="sec-lead" data-reveal>Un seul garage, un prix annoncé avant de commencer, un rendez-vous en ligne en une minute.</p>
+        </header>
+
+        <div class="sv-block">
+          <figure class="sv-fig" data-reveal="img">
+            <div class="photo"><img decoding="async" src="assets/photos/atelier-montage.webp" width="720" height="960" alt="L'atelier de montage de Point Pneus" loading="lazy"></div>
+            <figcaption>Chez Point Pneus, à Cabestany</figcaption>
+          </figure>
+          <div class="sv-rows">
+            <h3 class="sv-group" data-reveal>L'atelier, tarifs affichés</h3>
+            <ul class="rows">
+            <li data-reveal><a class="row" id="svc-pneus" href="reserver.html?prestation=pneus" data-photo="atelier-montage"><span class="row-main"><span class="row-t">Montage et équilibrage</span><span class="row-d">Valves comprises, sur chaque pneu.</span></span><span class="row-p"><span class="pv"><b>Inclus</b></span></span><span class="row-go">Réserver</span></a></li>
+            <li data-reveal><a class="row" id="svc-crevaison" href="reserver.html?prestation=crevaison" data-photo="accueil"><span class="row-main"><span class="row-t">Réparation crevaison</span><span class="row-d">À la mèche ou vulcanisation à chaud, si le pneu est réparable.</span></span><span class="row-p"><span class="pv"><b>15 €</b><small>mèche</small></span><span class="pv"><b><i>dès</i> 35 €</b><small>à chaud</small></span></span><span class="row-go">Réserver</span></a></li>
+            <li data-reveal><a class="row" id="svc-geometrie" href="reserver.html?prestation=geometrie" data-photo="atelier-montage"><span class="row-main"><span class="row-t">Géométrie 3D</span><span class="row-d">La voiture tire, le volant est de travers, les pneus s'usent d'un côté.</span></span><span class="row-p"><span class="pv"><b>65 €</b><small>avant</small></span><span class="pv"><b>85 €</b><small>complète</small></span><span class="pv"><b>100 €</b><small>4x4</small></span></span><span class="row-go">Réserver</span></a></li>
+            <li data-reveal><a class="row" id="svc-clim" href="reserver.html?prestation=clim" data-photo="accueil"><span class="row-main"><span class="row-t">Climatisation</span><span class="row-d">Contrôle de température, tirage au vide, recharge et test du circuit.</span></span><span class="row-p"><span class="pv"><b>65 €</b><small>R134a</small></span><span class="pv"><b>110 €</b><small>R1234yf</small></span></span><span class="row-go">Réserver</span></a></li>
+            <li data-reveal><a class="row" id="svc-freins" href="reserver.html?prestation=freins" data-photo="atelier-montage"><span class="row-main"><span class="row-t">Freinage</span><span class="row-d">Plaquettes, disques, liquide. Un bruit, une pédale molle ? On contrôle.</span></span><span class="row-p"><span class="pv"><b>Sur devis</b><small>annoncé avant travaux</small></span></span><span class="row-go">Réserver</span></a></li>
+            <li data-reveal><a class="row" id="svc-vidange" href="reserver.html?prestation=vidange" data-photo="accueil"><span class="row-main"><span class="row-t">Vidange et entretien</span><span class="row-d">Huile, filtres, niveaux, selon le carnet du constructeur.</span></span><span class="row-p"><span class="pv"><b>Sur devis</b></span></span><span class="row-go">Réserver</span></a></li>
+            <li data-reveal><a class="row" id="svc-meca" href="reserver.html?prestation=autre" data-photo="facade"><span class="row-main"><span class="row-t">Mécanique toutes marques</span><span class="row-d">Embrayage, distribution, échappement, suspension, cardans, batterie, pompe à eau, prise en charge du contrôle technique, rénovation des phares, pose de plaque.</span></span><span class="row-go">Décrire mon besoin</span></a></li>
+            </ul>
           </div>
         </div>
-        <div class="about-photos" aria-hidden="true">
-          <figure class="ph ph-a" data-depth="0.06"><img src="assets/photos/facade.webp" width="720" height="960" alt="" loading="lazy"></figure>
-          <figure class="ph ph-b" data-depth="0.14"><img src="assets/photos/atelier-montage.webp" width="720" height="960" alt="" loading="lazy"></figure>
-          <div class="ph-badge" data-depth="0.2"><strong>3D</strong><span>Géométrie<br>au banc</span></div>
+
+        <div class="sv-block rev">
+          <div class="sv-rows">
+            <h3 class="sv-group" data-reveal>Les pneus, en boutique</h3>
+            <ul class="rows">
+            <li data-reveal><a class="row" href="pneus.html#collection" data-photo="mur-de-pneus"><span class="row-main"><span class="row-t">Pneus neufs</span><span class="row-d">Grandes marques et petits budgets.</span></span><span class="row-go">Voir en boutique</span></a></li>
+            <li data-reveal><a class="row" href="pneus.html?cat=occasion#collection" data-photo="magasin"><span class="row-main"><span class="row-t">Pneus d'occasion</span><span class="row-d">Grandes marques peu usées, testées et garanties.</span></span><span class="row-go">Voir en boutique</span></a></li>
+            <li data-reveal><a class="row" href="pneus.html?cat=4saisons#collection" data-photo="mur-de-pneus"><span class="row-main"><span class="row-t">Été, hiver, 4 saisons</span><span class="row-d">Avec les marquages 3PMSF exigés par la loi Montagne.</span></span><span class="row-go">Voir en boutique</span></a></li>
+            <li data-reveal><a class="row" href="pneus.html?cat=competition#collection" data-photo="magasin"><span class="row-main"><span class="row-t">Compétition et drift</span><span class="row-d">Semi-slicks homologués route, lots pour le drift.</span></span><span class="row-go">Voir en boutique</span></a></li>
+            </ul>
+          </div>
+          <figure class="sv-fig" data-reveal="img">
+            <div class="photo"><img decoding="async" src="assets/photos/mur-de-pneus.webp" width="720" height="960" alt="Le mur de pneus du magasin" loading="lazy"></div>
+            <figcaption>Le stock, sur place</figcaption>
+          </figure>
         </div>
       </div>
+    </section>
+
+    <!-- Recherche et choix des pneus -->
+    <section class="find" id="infos" aria-labelledby="find-title">
       <div class="wrap">
-        <ul class="facts-row">
-          <li data-reveal><span class="fr-n">01</span><strong>Montage inclus</strong><span>Équilibrage et valves compris, sur chaque pneu.</span></li>
-          <li data-reveal><span class="fr-n">02</span><strong>Neuf ou occasion</strong><span>Grandes marques et occasions testées, garanties.</span></li>
-          <li data-reveal><span class="fr-n">03</span><strong>3 ou 4 fois</strong><span>Paiement sans frais. Point Pneus aligne ses prix.</span></li>
-          <li data-reveal><span class="fr-n">04</span><strong>Pneus recyclés</strong><span>Vos pneus usagés repartent dans la bonne filière.</span></li>
+        <div class="find-head">
+          <div>
+            <p class="eyebrow tag">Choisir ses pneus</p>
+            <h2 class="display sec-title" id="find-title" data-split><span class="split-line"><span>Trouvez</span></span><span class="split-line"><span>votre pneu<span class="pt">.</span></span></span></h2>
+          </div>
+          <p class="sec-lead" data-reveal>Votre taille est écrite sur le flanc. Touchez ces chiffres pour comprendre ce que chacun veut dire.</p>
+        </div>
+        <button class="find-wall" type="button" data-open="reader" aria-label="Ouvrir Lire son pneu, exemple 205/55 R16 91V" data-reveal>
+          <span>205/55</span> <span>R16</span> <span>91V</span>
+        </button>
+        <div class="find-forms">
+          <form class="find-form" action="pneus.html#collection" method="get" data-reveal>
+            <label for="find-size">Vous connaissez votre taille</label>
+            <div class="size-field">
+              <input id="find-size" name="taille" type="text" placeholder="205/55 R16" autocomplete="off" spellcheck="false" enterkeyhint="go">
+              <button type="submit">Voir les pneus</button>
+            </div>
+            <p>Elle suit votre panier. Le garage confirme le prix exact et la disponibilité.</p>
+          </form>
+          <form class="find-form" action="reserver.html" method="get" data-reveal style="--d:.08s">
+            <label for="find-plate">Ou partez de votre plaque</label>
+            <div class="plate">
+              <span class="plate-eu" aria-hidden="true"><i></i>F</span>
+              <input id="find-plate" name="plaque" type="text" placeholder="AB-123-CD" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" data-plate>
+              <button class="plate-go" type="submit">Réserver</button>
+            </div>
+            <p>Elle préremplit votre véhicule au moment de prendre rendez-vous.</p>
+          </form>
+        </div>
+        <ul class="tips">
+          <li data-reveal><p class="tip-fig">1,6 mm</p><h3>La limite légale</h3><p>Quand la gomme arrive au niveau des témoins d'usure, le pneu doit être remplacé.</p></li>
+          <li data-reveal style="--d:.06s"><p class="tip-fig">5 ans</p><h3>L'âge à surveiller</h3><p>Les quatre derniers chiffres du code DOT donnent la semaine et l'année de fabrication.</p></li>
+          <li data-reveal style="--d:.12s"><p class="tip-fig">1<sup>er</sup> nov.</p><h3>Loi Montagne</h3><p>Jusqu'au 31 mars, les communes concernées des Pyrénées exigent des pneus 3PMSF, ou des chaînes à bord.</p></li>
         </ul>
       </div>
-      <div class="marquee" aria-hidden="true">
-        <div class="marquee-track"><span>Pneus neufs</span><span>Occasion</span><span>Crevaison</span><span>Géométrie 3D</span><span>Climatisation</span><span>Freinage</span><span>Vidange</span><span>Distribution</span><span>Compétition</span><span>Drift</span><span>Pneus neufs</span><span>Occasion</span><span>Crevaison</span><span>Géométrie 3D</span><span>Climatisation</span><span>Freinage</span><span>Vidange</span><span>Distribution</span><span>Compétition</span><span>Drift</span></div>
-      </div>
-    </section></div>
+    </section>
 
-    <!-- 3. L'atelier : la voiture devient un plan, chaque pièce montre un service -->
-    <div class="pw"><section class="page drive" id="atelier" aria-labelledby="drive-title">
+    <!-- L'atelier : la voiture devient un plan, chaque pièce montre un service -->
+    <section class="drive" id="atelier" aria-labelledby="drive-title">
       <div class="drive-stage" id="drive-stage">
-        <div class="drive-floor" aria-hidden="true"></div>
         <canvas class="stage-gl" id="gl-car" aria-hidden="true"></canvas>
         <div class="scan" id="scan" aria-hidden="true"></div>
-        <h2 class="display drive-title" id="drive-title"><span class="dt-left">Roulez</span> <span class="dt-right">serein</span></h2>
-        <p class="drive-sub">De la gomme au moteur,<br>tout passe à l'atelier.</p>
-        <div class="drive-head">
-          <p class="eyebrow tag">L'atelier, pièce par pièce</p>
-          <p class="drive-head-t">Touchez une pièce pour voir ce qu'on y fait.</p>
+        <h2 class="display drive-title" id="drive-title"><span class="dt-left">Roulez</span> <span class="dt-right">serein<span class="pt">.</span></span></h2>
+        <p class="drive-sub">De la gomme au moteur, tout passe à l'atelier.</p>
+        <p class="drive-head">L'atelier, pièce par pièce<span>Choisissez une zone du véhicule</span></p>
+        <div class="ap-plan" id="ap-plan">
+          <img decoding="async" class="drive-poster" src="assets/hero/voiture-plan.webp?v=3" width="1280" height="734" alt="Plan du véhicule vu de dessus" loading="lazy">
+          <svg class="ap-lit" viewBox="0 0 1280 734" aria-hidden="true"><defs><radialGradient id="fx-w"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><linearGradient id="fx-t" gradientUnits="userSpaceOnUse" x1="1190" x2="1276" y1="0" y2="0"><stop offset="0" stop-color="#7a3cff" stop-opacity=".78"/><stop offset=".55" stop-color="#7a3cff" stop-opacity=".5"/><stop offset="1" stop-color="#7a3cff" stop-opacity="0"/></linearGradient><linearGradient id="fx-l" gradientUnits="userSpaceOnUse" x1="1190" x2="1276" y1="0" y2="0"><stop offset="0" stop-color="#d9c6ff"/><stop offset=".55" stop-color="#b794ff" stop-opacity=".75"/><stop offset="1" stop-color="#b794ff" stop-opacity="0"/></linearGradient></defs><g class="fx"><ellipse cx="40" cy="200" rx="56" ry="70" fill="url(#fx-w)" opacity=".5"/><ellipse cx="40" cy="534" rx="56" ry="70" fill="url(#fx-w)" opacity=".5"/><circle cx="76" cy="200" r="58" fill="url(#fx-w)"/><circle cx="76" cy="534" r="58" fill="url(#fx-w)"/><path d="M1188 162Q1210 215 1217 282H1420V162Z" fill="url(#fx-t)"/><path d="M1188 572Q1210 519 1217 452H1420V572Z" fill="url(#fx-t)"/><path class="fx-e" d="M1188 162H1420M1217 282H1420M1188 572H1420M1217 452H1420"/><path class="fx-run" d="M1200 192H1420M1208 252H1420M1200 542H1420M1208 482H1420"/><path class="fx-run r2" d="M1204 222H1420M1204 512H1420"/><path class="fx-h" d="M1188 162Q1210 215 1217 282M1188 572Q1210 519 1217 452"/><path class="fx-l" d="M1188 162Q1210 215 1217 282M1188 572Q1210 519 1217 452"/></g><g data-z="pneus"><rect x="146" y="600" width="288" height="79" rx="12"/><rect x="146" y="55" width="288" height="79" rx="12"/><rect x="933" y="600" width="274" height="79" rx="12"/><rect x="933" y="55" width="274" height="79" rx="12"/></g><g data-z="crevaison"><rect x="933" y="600" width="274" height="79" rx="12"/></g><g data-z="clim"><rect x="232" y="165" width="147" height="404" rx="12"/></g><g data-z="geometrie"><rect x="146" y="600" width="288" height="79" rx="12"/><rect x="146" y="55" width="288" height="79" rx="12"/><path d="M290 134V600"/></g><g data-z="phares"><rect x="40" y="130" width="76" height="124" rx="12"/><rect x="40" y="480" width="76" height="124" rx="12"/></g><g data-z="moteur"><rect x="56" y="199" width="176" height="336" rx="12"/></g><g data-z="freins"><rect x="230" y="600" width="120" height="79" rx="12"/><rect x="230" y="55" width="120" height="79" rx="12"/><rect x="1010" y="600" width="120" height="79" rx="12"/><rect x="1010" y="55" width="120" height="79" rx="12"/></g><path class="ap-link"/></svg>
+          <button class="hs" type="button" data-z="pneus" data-x="290" data-y="640" tabindex="-1" aria-hidden="true" title="Pneus"></button><button class="hs" type="button" data-z="crevaison" data-x="1070" data-y="640" tabindex="-1" aria-hidden="true" title="Crevaison"></button><button class="hs" type="button" data-z="clim" data-x="330" data-y="367" tabindex="-1" aria-hidden="true" title="Climatisation"></button><button class="hs" type="button" data-z="geometrie" data-x="290" data-y="94" tabindex="-1" aria-hidden="true" title="Géométrie 3D"></button><button class="hs" type="button" data-z="phares" data-x="78" data-y="192" tabindex="-1" aria-hidden="true" title="Phares"></button><button class="hs" type="button" data-z="moteur" data-x="140" data-y="367" tabindex="-1" aria-hidden="true" title="Moteur"></button><button class="hs" type="button" data-z="freins" data-x="1070" data-y="94" tabindex="-1" aria-hidden="true" title="Freinage"></button>
         </div>
         <svg class="co-lines" id="co-lines" aria-hidden="true"></svg>
-        <nav class="callouts" id="callouts" aria-label="Services de l'atelier">
-          <a class="co" href="pneus.html" data-anchor="WheelFrontL" data-side="l"><span class="co-n">01</span><span class="co-t">Pneus</span><span class="co-d">Neufs, occasion, montage inclus</span></a>
-          <a class="co" href="#services" data-svc="crevaison" data-anchor="WheelRearL" data-side="l"><span class="co-n">02</span><span class="co-t">Crevaison</span><span class="co-d">Mèche ou vulcanisation</span></a>
-          <a class="co" href="#services" data-svc="clim" data-anchor="InteriorDashMid" data-side="l"><span class="co-n">03</span><span class="co-t">Climatisation</span><span class="co-d">Recharge et contrôle</span></a>
-          <a class="co" href="#services" data-svc="geometrie" data-anchor="WheelFrontR" data-side="r"><span class="co-n">04</span><span class="co-t">Géométrie 3D</span><span class="co-d">Parallélisme et carrossage</span></a>
-          <a class="co" href="#services" data-svc="phares" data-anchor="BodyHeadlights" data-side="r"><span class="co-n">05</span><span class="co-t">Phares</span><span class="co-d">Rénovation des optiques</span></a>
-          <a class="co" href="#services" data-svc="vidange" data-anchor="Engine" data-side="r"><span class="co-n">06</span><span class="co-t">Moteur</span><span class="co-d">Vidange, distribution, embrayage</span></a>
-          <a class="co" href="#services" data-svc="freins" data-anchor="WheelRearR" data-side="r"><span class="co-n">07</span><span class="co-t">Freinage</span><span class="co-d">Plaquettes et disques</span></a>
-        </nav>
+        <div class="callouts" id="callouts" role="group" aria-label="Zones du véhicule">
+          <button class="co" type="button" data-z="pneus" data-anchor="WheelFrontL" data-side="l" aria-pressed="false" aria-controls="ap-panel"><span class="co-t">Pneus</span><span class="co-d">Neufs, occasion, montage inclus</span></button>
+          <button class="co" type="button" data-z="crevaison" data-anchor="WheelRearL" data-side="l" aria-pressed="false" aria-controls="ap-panel"><span class="co-t">Crevaison</span><span class="co-d">Mèche ou vulcanisation</span></button>
+          <button class="co" type="button" data-z="clim" data-anchor="InteriorDashMid" data-side="l" aria-pressed="false" aria-controls="ap-panel"><span class="co-t">Climatisation</span><span class="co-d">Recharge et contrôle</span></button>
+          <button class="co" type="button" data-z="geometrie" data-anchor="WheelFrontR" data-side="r" aria-pressed="false" aria-controls="ap-panel"><span class="co-t">Géométrie 3D</span><span class="co-d">Parallélisme et carrossage</span></button>
+          <button class="co" type="button" data-z="phares" data-anchor="BodyHeadlights" data-side="r" aria-pressed="false" aria-controls="ap-panel"><span class="co-t">Phares</span><span class="co-d">Rénovation des optiques</span></button>
+          <button class="co" type="button" data-z="moteur" data-anchor="Engine" data-side="r" aria-pressed="false" aria-controls="ap-panel"><span class="co-t">Moteur</span><span class="co-d">Vidange, distribution, embrayage</span></button>
+          <button class="co" type="button" data-z="freins" data-anchor="WheelRearR" data-side="r" aria-pressed="false" aria-controls="ap-panel"><span class="co-t">Freinage</span><span class="co-d">Plaquettes et disques</span></button>
+          <p class="co-hint">Touchez une zone</p>
+        </div>
+        <div class="ap" id="ap-panel" aria-live="polite">
+          <article class="ap-card" data-z="pneus">
+            <p class="ap-zone">Les roues</p>
+            <h3 class="ap-t">Pneus<span class="pt">.</span></h3>
+            <p class="ap-d">Neufs ou d'occasion, été, hiver, 4 saisons, compétition et drift. Le montage, l'équilibrage et les valves sont inclus.</p>
+            <div class="ap-p"><span class="pv"><b>Inclus</b><small>montage, équilibrage, valves</small></span></div>
+            <div class="ap-cta"><a class="btn btn-violet btn-arrow" href="reserver.html?prestation=pneus">Prendre rendez-vous</a><a class="link-arrow" href="pneus.html#collection">Voir les pneus</a></div>
+          </article>
+          <article class="ap-card" data-z="crevaison" hidden>
+            <p class="ap-zone">Un pneu percé</p>
+            <h3 class="ap-t">Crevaison<span class="pt">.</span></h3>
+            <p class="ap-d">À la mèche ou vulcanisation à chaud, si le pneu est réparable.</p>
+            <div class="ap-p"><span class="pv"><b>15 €</b><small>mèche</small></span><span class="pv"><b><i>dès</i> 35 €</b><small>à chaud</small></span></div>
+            <div class="ap-cta"><a class="btn btn-violet btn-arrow" href="reserver.html?prestation=crevaison">Prendre rendez-vous</a><a class="link-arrow" href="#services" data-svc="crevaison">Tous les tarifs</a></div>
+          </article>
+          <article class="ap-card" data-z="clim" hidden>
+            <p class="ap-zone">L'habitacle</p>
+            <h3 class="ap-t">Climatisation<span class="pt">.</span></h3>
+            <p class="ap-d">Contrôle de température, tirage au vide, recharge et test du circuit.</p>
+            <div class="ap-p"><span class="pv"><b>65 €</b><small>R134a</small></span><span class="pv"><b>110 €</b><small>R1234yf</small></span></div>
+            <div class="ap-cta"><a class="btn btn-violet btn-arrow" href="reserver.html?prestation=clim">Prendre rendez-vous</a><a class="link-arrow" href="#services" data-svc="clim">Tous les tarifs</a></div>
+          </article>
+          <article class="ap-card" data-z="geometrie" hidden>
+            <p class="ap-zone">Les trains roulants</p>
+            <h3 class="ap-t">Géométrie 3D<span class="pt">.</span></h3>
+            <p class="ap-d">La voiture tire, le volant est de travers, les pneus s'usent d'un côté.</p>
+            <div class="ap-p"><span class="pv"><b>65 €</b><small>avant</small></span><span class="pv"><b>85 €</b><small>complète</small></span><span class="pv"><b>100 €</b><small>4x4</small></span></div>
+            <div class="ap-cta"><a class="btn btn-violet btn-arrow" href="reserver.html?prestation=geometrie">Prendre rendez-vous</a><a class="link-arrow" href="#services" data-svc="geometrie">Tous les tarifs</a></div>
+          </article>
+          <article class="ap-card" data-z="phares" hidden>
+            <p class="ap-zone">L'éclairage</p>
+            <h3 class="ap-t">Phares<span class="pt">.</span></h3>
+            <p class="ap-d">Rénovation des optiques ternies.</p>
+            <div class="ap-p"><span class="pv"><b>Sur devis</b></span></div>
+            <div class="ap-cta"><a class="btn btn-violet btn-arrow" href="reserver.html?prestation=autre">Prendre rendez-vous</a><a class="link-arrow" href="#services" data-svc="phares">Tous les tarifs</a></div>
+          </article>
+          <article class="ap-card" data-z="moteur" hidden>
+            <p class="ap-zone">Sous le capot</p>
+            <h3 class="ap-t">Moteur<span class="pt">.</span></h3>
+            <p class="ap-d">Vidange, huile, filtres et niveaux, selon le carnet du constructeur. Distribution, embrayage, pompe à eau.</p>
+            <div class="ap-p"><span class="pv"><b>Sur devis</b></span></div>
+            <div class="ap-cta"><a class="btn btn-violet btn-arrow" href="reserver.html?prestation=vidange">Prendre rendez-vous</a><a class="link-arrow" href="#services" data-svc="vidange">Tous les tarifs</a></div>
+          </article>
+          <article class="ap-card" data-z="freins" hidden>
+            <p class="ap-zone">Le freinage</p>
+            <h3 class="ap-t">Freinage<span class="pt">.</span></h3>
+            <p class="ap-d">Plaquettes, disques, liquide. Un bruit, une pédale molle ? On contrôle.</p>
+            <div class="ap-p"><span class="pv"><b>Sur devis</b><small>annoncé avant travaux</small></span></div>
+            <div class="ap-cta"><a class="btn btn-violet btn-arrow" href="reserver.html?prestation=freins">Prendre rendez-vous</a><a class="link-arrow" href="#services" data-svc="freins">Tous les tarifs</a></div>
+          </article>
+        </div>
       </div>
-    </section></div>
+    </section>
 
-    <!-- 4. Services -->
-    <div class="pw"><section class="page services" id="services" aria-labelledby="services-title">
+    <!-- Pourquoi : la bande sponsor -->
+    <section class="why" id="pourquoi" aria-labelledby="why-title">
       <div class="wrap">
-        <div class="services-head">
-          <div>
-            <p class="eyebrow tag">Tous les services</p>
-            <h2 class="display section-title" id="services-title" data-reveal><span class="split-line"><span>Tout ce qu'il faut,</span></span><span class="split-line"><span>au même <em>endroit.</em></span></span></h2>
-          </div>
-          <p class="services-lead" data-reveal>Pneus, freins, clim, géométrie ou mécanique : un seul garage, un prix annoncé avant de commencer, et un rendez-vous en ligne en une minute.</p>
-        </div>
-        <div class="bento">
-          <a class="card card-tires has-img" href="pneus.html" data-tilt id="svc-pneus">
-            <img src="assets/photos/mur-de-pneus.webp" width="720" height="960" alt="" loading="lazy">
-            <span class="card-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></span>
-            <span class="card-body">
-              <span class="card-k">Boutique en ligne</span>
-              <span class="card-t">Pneus neufs et d'occasion</span>
-              <span class="card-d">Été, hiver, 4 saisons, sport, compétition, drift. Grandes marques et petits budgets. Montage, équilibrage et valves inclus.</span>
-              <span class="card-go">Voir la collection</span>
-            </span>
-          </a>
-          <a class="card" href="reserver.html?prestation=crevaison" data-tilt id="svc-crevaison">
-            <span class="card-ico"><svg viewBox="0 0 24 24"><path d="M4 20 14 10"/><path d="m12 6 6 6"/><path d="M15 3l6 6-3 3-6-6z"/></svg></span>
-            <span class="card-body"><span class="card-t">Crevaison</span><span class="card-d">Réparation à la mèche ou vulcanisation à chaud, si le pneu est réparable.</span>
-            <span class="card-p"><b>15 €</b> mèche · <b>dès 35 €</b> à chaud</span><span class="card-go">Réserver</span></span>
-          </a>
-          <a class="card" href="reserver.html?prestation=geometrie" data-tilt id="svc-geometrie">
-            <span class="card-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/><circle cx="12" cy="12" r="1.5"/></svg></span>
-            <span class="card-body"><span class="card-t">Géométrie 3D</span><span class="card-d">La voiture tire, le volant est de travers, les pneus s'usent d'un côté.</span>
-            <span class="card-p"><b>65 €</b> avant · <b>85 €</b> complète · <b>100 €</b> 4x4</span><span class="card-go">Réserver</span></span>
-          </a>
-          <a class="card" href="reserver.html?prestation=clim" data-tilt id="svc-clim">
-            <span class="card-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/><path d="m9 4 3 2 3-2M9 20l3-2 3 2"/></svg></span>
-            <span class="card-body"><span class="card-t">Climatisation</span><span class="card-d">Contrôle de température, tirage au vide, recharge et test du circuit.</span>
-            <span class="card-p"><b>65 €</b> R134a · <b>110 €</b> R1234yf</span><span class="card-go">Réserver</span></span>
-          </a>
-          <a class="card" href="reserver.html?prestation=freins" data-tilt id="svc-freins">
-            <span class="card-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/><path d="M17 5.5a9 9 0 0 1 2.5 4"/><path d="M15 4.2 18.5 3l1.5 3.5"/></svg></span>
-            <span class="card-body"><span class="card-t">Freinage</span><span class="card-d">Plaquettes, disques, liquide. Un bruit, une pédale molle ? On contrôle.</span>
-            <span class="card-p">Sur devis, annoncé avant travaux</span><span class="card-go">Réserver</span></span>
-          </a>
-          <a class="card" href="reserver.html?prestation=vidange" data-tilt id="svc-vidange">
-            <span class="card-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/></svg></span>
-            <span class="card-body"><span class="card-t">Vidange et entretien</span><span class="card-d">Huile, filtres, niveaux, selon le carnet du constructeur.</span>
-            <span class="card-p">Sur devis</span><span class="card-go">Réserver</span></span>
-          </a>
-          <a class="card card-wide has-img" href="reserver.html?prestation=autre" data-tilt id="svc-meca">
-            <img src="assets/photos/atelier-montage.webp" width="720" height="960" alt="" loading="lazy">
-            <span class="card-ico"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg></span>
-            <span class="card-body"><span class="card-k">Mécanique toutes marques</span><span class="card-t">Et tout le reste</span>
-            <span class="card-d">Embrayage, distribution, échappement, suspension, cardans, batterie, pompe à eau, prise en charge du contrôle technique, rénovation des phares, pose de plaque.</span>
-            <span class="card-go">Décrire mon besoin</span></span>
-          </a>
-        </div>
-        <ul class="pay-row" data-reveal>
-          <li><b>3 ou 4 fois</b> sans frais</li>
-          <li>On <b>aligne</b> nos prix</li>
-          <li>Pièces et main-d'œuvre <b>garanties</b></li>
-          <li>Pneus usagés <b>recyclés</b></li>
-        </ul>
+        <p class="eyebrow tag">Pourquoi Point Pneus</p>
+        <h2 class="sr-only" id="why-title">Pourquoi choisir Point Pneus</h2>
       </div>
-    </section></div>
+      <div class="tape" id="tape">
+        <div class="tape-a"><div class="tape-track">
+          <ul class="tape-run"><li><strong>Montage inclus</strong><span>Équilibrage et valves compris</span></li><li><strong>Neuf ou occasion</strong><span>Occasions testées et garanties</span></li><li><strong>On aligne nos prix</strong><span>Annoncés avant de commencer</span></li><li><strong>3 ou 4 fois</strong><span>Sans frais, au garage</span></li><li><strong>Travail garanti</strong><span>Pièces et main-d'œuvre</span></li><li><strong>Pneus recyclés</strong><span>Dans la bonne filière</span></li></ul>
+          <ul class="tape-run" aria-hidden="true"><li><strong>Montage inclus</strong><span>Équilibrage et valves compris</span></li><li><strong>Neuf ou occasion</strong><span>Occasions testées et garanties</span></li><li><strong>On aligne nos prix</strong><span>Annoncés avant de commencer</span></li><li><strong>3 ou 4 fois</strong><span>Sans frais, au garage</span></li><li><strong>Travail garanti</strong><span>Pièces et main-d'œuvre</span></li><li><strong>Pneus recyclés</strong><span>Dans la bonne filière</span></li></ul>
+        </div></div>
+        <div class="tape-b"><div class="tape-track">
+          <ul class="tape-run" aria-label="Marques en vitrine"><li>Michelin</li><li>Continental</li><li>Hankook</li><li>Firestone</li><li>Goodyear</li><li>Bridgestone</li><li>Toyo</li><li>Nankang</li><li>Federal</li></ul>
+          <ul class="tape-run" aria-hidden="true"><li>Michelin</li><li>Continental</li><li>Hankook</li><li>Firestone</li><li>Goodyear</li><li>Bridgestone</li><li>Toyo</li><li>Nankang</li><li>Federal</li></ul>
+          <ul class="tape-run" aria-hidden="true"><li>Michelin</li><li>Continental</li><li>Hankook</li><li>Firestone</li><li>Goodyear</li><li>Bridgestone</li><li>Toyo</li><li>Nankang</li><li>Federal</li></ul>
+          <ul class="tape-run" aria-hidden="true"><li>Michelin</li><li>Continental</li><li>Hankook</li><li>Firestone</li><li>Goodyear</li><li>Bridgestone</li><li>Toyo</li><li>Nankang</li><li>Federal</li></ul>
+        </div></div>
+      </div>
+    </section>
 
-    <!-- 5. Infos pratiques, lire son pneu, repères -->
-    <div class="pw"><section class="page infos" id="infos" aria-labelledby="infos-title">
+    <!-- Le garage -->
+    <section class="garage" id="garage" aria-labelledby="garage-title">
+      <div class="wrap garage-grid">
+        <div class="garage-copy">
+          <p class="eyebrow tag">Le garage</p>
+          <h2 class="display sec-title" id="garage-title" data-split><span class="split-line"><span>Le pneu,</span></span><span class="split-line"><span>sans détour<span class="pt">.</span></span></span></h2>
+          <p class="sec-lead" data-reveal>Un garage indépendant à deux pas de Perpignan. Vous dites ce qui ne va pas, on vous donne un prix clair, et vous repartez.</p>
+        </div>
+        <figure class="photo g-a" data-reveal="img"><img decoding="async" src="assets/photos/facade.webp" width="1024" height="695" alt="La façade de Point Pneus, 9 rue Henri Becquerel à Cabestany" loading="lazy"></figure>
+        <figure class="photo g-b" data-reveal="img"><img decoding="async" src="assets/photos/atelier-montage.webp" width="720" height="960" alt="L'atelier et ses machines de montage de pneus" loading="lazy"></figure>
+        <figure class="photo g-c" data-reveal="img"><img decoding="async" src="assets/photos/mur-de-pneus.webp" width="720" height="960" alt="Les rayonnages de pneus neufs du magasin" loading="lazy"></figure>
+        <figure class="photo g-d" data-reveal="img"><img decoding="async" src="assets/photos/magasin.webp" width="720" height="960" alt="L'espace d'accueil du garage, avec une pile de pneus" loading="lazy"></figure>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="contact" id="contact" aria-labelledby="contact-title">
       <div class="wrap">
-        <h2 class="sr-only" id="infos-title">Infos pratiques</h2>
-        <div class="live-row">
-          <a class="live-card" href="https://www.google.com/maps/dir/?api=1&amp;destination=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany" target="_blank" rel="noopener" data-reveal>
-            <span class="eyebrow">Basé à</span>
-            <span class="live-big">Cabestany</span>
-            <span class="live-small">9 Rue Henri Becquerel · 5 min de Perpignan</span>
-            <span class="live-go">Itinéraire</span>
-          </a>
-          <button class="live-card" type="button" data-open="hours" data-reveal>
-            <span class="eyebrow">Horaires</span>
-            <span class="live-big">Lun – ven</span>
-            <span class="live-small"><span class="live-dot" data-open-dot></span> <span data-open-text>…</span></span>
-            <span class="live-go">Voir la semaine</span>
-          </button>
-          <div class="live-card live-wx" data-reveal>
-            <span class="eyebrow">En direct à Cabestany</span>
-            <span class="live-big"><time data-clock>--:--</time><span class="live-wxi" data-wx-icon></span><span data-wx-text class="live-wxt"></span></span>
-            <span class="live-small" data-wx-tip>Chargement de la météo…</span>
+        <p class="eyebrow tag">Une crevaison, un devis ?</p>
+        <h2 class="sr-only" id="contact-title">Contacter le garage</h2>
+        <form class="contact-plate" action="reserver.html" method="get">
+          <label for="contact-plate">Entrez votre plaque, choisissez la prestation</label>
+          <div class="plate plate-xl">
+            <span class="plate-eu" aria-hidden="true"><i></i>F</span>
+            <input id="contact-plate" name="plaque" type="text" placeholder="AB-123-CD" maxlength="12" required autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" data-plate>
+            <button class="plate-go" type="submit" aria-label="Choisir ma prestation"><span>Réserver</span></button>
+          </div>
+        </form>
+        <div class="contact-or">
+          <a class="contact-call" href="tel:+33468505068">Ou appelez le garage <b>04 68 50 50 68</b></a>
+          <div class="contact-cta">
+            <a class="link-arrow" href="https://www.google.com/maps/dir/?api=1&amp;destination=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany" data-open="route" target="_blank" rel="noopener">Itinéraire</a>
+            <a class="link-arrow" href="reserver.html">Réserver sans plaque</a>
           </div>
         </div>
-
-        <div class="reader-teaser">
-          <div class="rt-copy">
-            <p class="eyebrow tag">Option · Lire son pneu</p>
-            <h3 class="display rt-title" data-reveal>Ce que disent<br>les chiffres <em>du flanc.</em></h3>
-            <p class="rt-lead">Largeur, hauteur, jante, charge, vitesse, âge : touchez l'inscription et chaque mesure s'explique. Vous pouvez aussi lire votre propre pneu.</p>
-            <button class="btn btn-violet btn-arrow" type="button" data-open="reader" data-magnet="0.2">Lire son pneu</button>
+        <div class="contact-grid">
+          <div class="cc">
+            <h3>Adresse</h3>
+            <a class="cc-main" href="https://www.google.com/maps/dir/?api=1&amp;destination=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany" data-open="route" target="_blank" rel="noopener">9 Rue Henri Becquerel<br>66330 Cabestany</a>
+            <span class="cc-more">Choisir son GPS</span>
           </div>
-          <button class="rt-wall" type="button" data-open="reader" aria-label="Ouvrir Lire son pneu">
-            <span class="rt-size"><span>205</span>/<span>55</span> <span>R</span><span>16</span> <span>91</span><span>V</span></span>
-            <span class="rt-tags"><span>DOT 4526</span><span>M+S</span><span>▲ TWI</span></span>
-          </button>
-        </div>
-
-        <div class="tips">
-          <p class="eyebrow tag">Trois repères à garder en tête</p>
-          <div class="tips-row">
-            <article data-reveal><p class="tip-fig">1,6 mm</p><h3>La limite légale</h3><p>Quand la gomme arrive au niveau des témoins d'usure, dans les rainures, le pneu doit être remplacé.</p></article>
-            <article data-reveal><p class="tip-fig">5 ans</p><h3>L'âge à surveiller</h3><p>La gomme vieillit même si elle roule peu. Les quatre derniers chiffres du code DOT donnent la semaine et l'année de fabrication.</p></article>
-            <article data-reveal><p class="tip-fig">1<sup>er</sup> nov.</p><h3>Loi Montagne</h3><p>Jusqu'au 31 mars, les communes de montagne concernées, dans les Pyrénées notamment, exigent des pneus 3PMSF, ou des chaînes ou chaussettes à bord.</p></article>
+          <div class="cc">
+            <h3>Horaires</h3>
+            <button class="cc-main" type="button" data-open="hours">Lundi au vendredi<br>8 h – 12 h, 14 h – 18 h 30</button>
+            <span class="cc-more"><span class="live-dot" data-open-dot></span><span data-open-text>Voir la semaine</span></span>
+          </div>
+          <div class="cc">
+            <h3>À Cabestany, en ce moment</h3>
+            <button class="cc-main" type="button" data-open="hours"><time data-clock>--:--</time> · <span data-wx-text>météo…</span></button>
+            <p class="contact-tip" data-wx-tip></p>
+          </div>
+          <div class="cc">
+            <h3>Écrire au garage</h3>
+            <a class="cc-main" href="mailto:pointpneusguerido@free.fr">pointpneusguerido@free.fr</a>
+            <span class="cc-more">Envoyer un message</span>
           </div>
         </div>
       </div>
-    </section></div>
-
-    <!-- 6. Contact -->
-    <div class="pw"><footer class="page foot" id="contact">
-      <div class="foot-glow" aria-hidden="true"></div>
-      <div class="wrap">
-        <h2 class="display foot-title" data-reveal><span class="split-line"><span>Une crevaison, un devis&nbsp;?</span></span><span class="split-line"><span><em>On s'en occupe.</em></span></span></h2>
-        <div class="foot-grid">
-          <div><p class="eyebrow">Téléphone</p><a class="foot-big hl" href="tel:+33468505068">04 68 50 50 68</a></div>
-          <div><p class="eyebrow">E-mail</p><a class="foot-big foot-mail hl" href="mailto:pointpneusguerido@free.fr">pointpneusguerido@free.fr</a></div>
-          <div><p class="eyebrow">Adresse</p><address>9 Rue Henri Becquerel<br>66330 Cabestany</address>
-            <a class="link-arrow" href="https://www.google.com/maps/dir/?api=1&amp;destination=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany" target="_blank" rel="noopener">Itinéraire</a></div>
-          <div><p class="eyebrow">Horaires</p><p>Lundi au vendredi<br>8 h – 12 h, 14 h – 18 h 30</p><button class="link-arrow" type="button" data-open="hours">Ouvert maintenant ?</button></div>
-        </div>
-        <div class="foot-cta">
-          <a class="btn btn-light btn-arrow" href="reserver.html" data-magnet="0.2">Prendre rendez-vous</a>
-          <a class="btn btn-ghost" href="pneus.html">Boutique pneus</a>
-          <a class="btn btn-ghost" href="mailto:pointpneusguerido@free.fr?subject=Demande%20de%20devis">Demander un devis</a>
-        </div>
-        <div class="foot-bottom">
-          <p>© <span id="year">2026</span> Point Pneus Guerido</p>
-          <p class="foot-links"><a href="mentions-legales.html">Mentions légales</a><a href="confidentialite.html">Vos données</a><a href="reserver.html">Rendez-vous</a><a href="garage.html">Espace gérant</a></p>
-          <p class="credit">Voiture 3D : « Car Concept », Eric Chadwick, Darmstadt Graphics Group, <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" rel="noopener" target="_blank">CC BY 4.0</a></p>
-        </div>
-      </div>
-    </footer></div>
+    </section>
   </main>
 
-  <nav class="dock" aria-label="Actions rapides">
-    <form class="plate" action="reserver.html" method="get">
-      <label class="sr-only" for="dock-plate-input">Votre plaque d'immatriculation, pour prendre rendez-vous</label>
-      <span class="plate-eu" aria-hidden="true"><i></i>F</span>
-      <input id="dock-plate-input" name="plaque" type="text" placeholder="AB-123-CD" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" data-plate>
-      <button class="plate-go" type="submit"><span>Prendre RDV</span></button>
-    </form>
-    <a class="dock-call" href="tel:+33468505068" aria-label="Appeler le 04 68 50 50 68">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>
-    </a>
+  <footer class="foot">
+    <div class="wrap foot-in">
+      <p>© <span id="year">2026</span> Point Pneus Guerido</p>
+      <p class="foot-links"><a href="pneus.html">Boutique</a><a href="reserver.html">Rendez-vous</a><a href="mentions-legales.html">Mentions légales</a><a href="confidentialite.html">Vos données</a><a href="cgu.html">CGU</a><a href="confidentialite.html#cookies" data-consent>Cookies</a><a href="garage.html">Espace gérant</a></p>
+      <p class="credit">Voiture 3D : « Car Concept », Eric Chadwick, Darmstadt Graphics Group, <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" rel="noopener" target="_blank">CC BY 4.0</a></p>
+    </div>
+  </footer>
+
+  <nav class="dock" id="dock" aria-label="Actions rapides">
+    <a class="dock-call" href="tel:+33468505068">Appeler</a>
+    <a class="dock-rdv" href="reserver.html">Prendre rendez-vous</a>
   </nav>
 
-  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
-  <script type="module" src="js/site.js?v=5"></script>
+  <script type="speculationrules">{"prefetch":[{"where":{"href_matches":"*.html"},"eagerness":"moderate"}]}</script>
+  <script src="booking-config.js?v=20261109a" defer></script>
+  <script src="js/consent.js?v=1" defer></script>
+  <script type="module" src="js/site.js?v=19"></script>
 </body>
 </html>

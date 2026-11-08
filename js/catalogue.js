@@ -3,13 +3,13 @@
 // montage, équilibrage et valves inclus. Le prix exact est confirmé au client avant la pose.
 
 export const CATEGORIES = [
-  { id: "ete", label: "Été", accent: "#ffb800", pattern: null, paint: "#ffd600", season: "Été", pitch: "Pour rouler au chaud, du printemps à l'automne." },
-  { id: "4saisons", label: "4 saisons", accent: "#8b5cf6", pattern: "allseason", paint: "#ffffff", season: "4 saisons", pitch: "Un seul train de pneus toute l'année, marqué 3PMSF." },
-  { id: "hiver", label: "Hiver", accent: "#5ec8ff", pattern: "winter", paint: "#a5dcff", season: "Hiver", pitch: "Gomme tendre et lamelles pour le froid, la neige et la loi Montagne." },
-  { id: "sport", label: "Sport", accent: "#ff5a3c", pattern: "sport", paint: "#ff7a5c", season: "Été", pitch: "Précision et adhérence pour les voitures puissantes." },
-  { id: "competition", label: "Compétition", accent: "#a855f7", pattern: "slick", paint: "#c4a1ff", season: "Été", pitch: "Semi-slicks homologués route, pour la piste et les journées circuit." },
-  { id: "drift", label: "Drift", accent: "#ec4899", pattern: "drift", paint: "#ff8ad8", season: "Été", pitch: "De la fumée, de la tenue, et des prix pour en user beaucoup." },
-  { id: "occasion", label: "Occasion", accent: "#3ccf7a", pattern: null, paint: "#7ef0a8", season: "Été", pitch: "Grandes marques peu usées, testées par une entreprise agréée et garanties." },
+  { id: "ete", code: "#f2b84b", label: "Été", accent: "#8a4dff", pattern: null, paint: "#ece8df", season: "Été", pitch: "Pour rouler au chaud, du printemps à l'automne." },
+  { id: "4saisons", code: "#7fd8a8", label: "Quatre saisons", accent: "#8a4dff", pattern: "allseason", paint: "#ece8df", season: "4 saisons", pitch: "Un seul train de pneus toute l'année, marqué 3PMSF." },
+  { id: "hiver", code: "#82c8f7", label: "Hiver", accent: "#8a4dff", pattern: "winter", paint: "#ece8df", season: "Hiver", pitch: "Gomme tendre et lamelles pour le froid, la neige et la loi Montagne." },
+  { id: "sport", code: "#ff7a6b", label: "Sport", accent: "#8a4dff", pattern: "sport", paint: "#ece8df", season: "Été", pitch: "Précision et adhérence pour les voitures puissantes." },
+  { id: "competition", code: "#b596ff", label: "Compétition", accent: "#8a4dff", pattern: "slick", paint: "#ece8df", season: "Été", pitch: "Semi-slicks homologués route, pour la piste et les journées circuit." },
+  { id: "drift", code: "#f08cc8", label: "Drift", accent: "#8a4dff", pattern: "drift", paint: "#ece8df", season: "Été", pitch: "De la fumée, de la tenue, et des prix pour en user beaucoup." },
+  { id: "occasion", code: "#bdb7aa", label: "Occasion", accent: "#8a4dff", pattern: null, paint: "#ece8df", season: "Été", pitch: "Grandes marques peu usées, testées par une entreprise agréée et garanties." },
 ];
 
 export const PRODUCTS = [

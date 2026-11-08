@@ -1,0 +1,48 @@
+/* Pages légales : du texte, bien composé. */
+
+.lg-hdr {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: max(14px, env(safe-area-inset-top)) var(--gutter) 14px; border-bottom: 1px solid var(--hair);
+}
+.lg-logo { display: inline-flex; width: 160px; color: var(--white); }
+.lg-logo svg { width: 100%; height: auto; }
+.lg-tel { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--t-14); font-weight: 500; font-variant-numeric: tabular-nums; text-decoration: none; transition: color 0.2s; }
+.lg-tel:hover { color: var(--violet-ink); }
+
+.section { padding-block: clamp(48px, 9vh, 104px); }
+.legal { max-width: calc(760px + 2 * var(--gutter)); }
+.legal h1 {
+  font-family: var(--display); font-stretch: 68%; font-weight: 600; text-transform: uppercase;
+  font-size: clamp(52px, 9vw, 120px); line-height: 0.92; margin: 0 0 40px;
+}
+.legal h2 {
+  font-family: var(--display); font-stretch: 68%; font-weight: 600; text-transform: uppercase;
+  font-size: var(--t-28); line-height: 1.05; margin: 40px 0 10px; padding-top: 18px; border-top: 1px solid var(--hair);
+}
+.legal p, .legal ul { margin: 0 0 12px; color: var(--white-2); max-width: 68ch; }
+.legal ul { padding-left: 20px; }
+.legal li { margin-bottom: 6px; }
+.legal strong { color: var(--white); font-weight: 600; }
+.legal a:not(.btn) { color: var(--white); text-underline-offset: 3px; text-decoration-color: var(--hair-2); }
+.legal a:not(.btn):hover { text-decoration-color: currentColor; }
+.legal .btn { margin-top: 32px; }
+
+.lg-foot { padding-block: 22px calc(22px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--hair); font-size: var(--t-14); color: var(--white-3); }
+.lg-foot .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 24px; }
+.lg-foot p { margin: 0; }
+.lg-foot nav { display: flex; flex-wrap: wrap; gap: 0 24px; }
+.lg-foot a { display: inline-flex; align-items: center; min-height: 32px; color: var(--white-2); text-decoration: none; transition: color 0.2s; }
+.lg-foot a:hover { color: var(--white); }
+
+.link-back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 24px; }
+
+/* Page 404 */
+.nf { min-height: calc(100vh - 170px); min-height: calc(100svh - 170px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: center; gap: 24px clamp(24px, 5vw, 80px); padding: clamp(32px, 6vh, 72px) var(--gutter); max-width: 1440px; margin-inline: auto; }
+.nf-code { margin: 0 0 16px; font-size: var(--t-16); color: var(--yellow-soft); font-variant-numeric: tabular-nums; }
+.nf h1 { margin: 0 0 20px; font-family: var(--display); font-stretch: 68%; font-weight: 600; text-transform: uppercase; font-size: clamp(60px, 9.4vw, 148px); line-height: 0.92; text-wrap: balance; }
+.nf-txt > p:not(.nf-code) { margin: 0 0 32px; max-width: 34ch; font-size: var(--t-20); color: var(--white-2); }
+.nf-img { display: block; width: 100%; height: auto; }
+@media (max-width: 760px) { .nf { grid-template-columns: minmax(0, 1fr); } .nf-img { order: -1; width: min(78%, 360px); justify-self: center; } }
+
+@media (max-width: 760px) { .lg-logo { width: 136px; } }
+@media (pointer: coarse) { .lg-foot a { min-height: 44px; } }

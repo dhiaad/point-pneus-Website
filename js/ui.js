@@ -1,6 +1,7 @@
 // Briques communes à toutes les pages : navigation, menu, heure et météo en direct,
 // panneau des horaires, « Lire son pneu », mise en forme de la plaque.
 
+
 export const PHONE = "04 68 50 50 68";
 export const TEL = "+33468505068";
 export const MAPS = "https://www.google.com/maps/dir/?api=1&destination=9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany";
@@ -134,7 +135,7 @@ function makeSheet(id, title, eyebrow, wide = false) {
   d = document.createElement("dialog");
   d.className = "sheet"; d.id = id; d.setAttribute("aria-labelledby", `${id}-t`);
   d.innerHTML = `<div class="sheet-panel${wide ? " wide" : ""}">
-    <div class="sheet-head"><div><p class="eyebrow tag">${eyebrow}</p><h2 id="${id}-t">${title}</h2></div>
+    <div class="sheet-head"><div><p class="eyebrow">${eyebrow}</p><h2 id="${id}-t">${title}</h2></div>
     <button class="sheet-x" type="button" data-close aria-label="Fermer">${X}</button></div>
     <div class="sheet-body" data-lenis-prevent></div></div>`;
   document.body.appendChild(d);
@@ -146,12 +147,11 @@ export function openSheet(d) {
   if (d.open) return;
   d.classList.remove("closing");
   d.showModal();
-  window.__lenis?.stop();
 }
 export function closeSheet(d) {
   if (!d.open || d.classList.contains("closing")) return;
   d.classList.add("closing");
-  setTimeout(() => { d.classList.remove("closing"); d.close(); if (!document.querySelector("dialog[open]")) window.__lenis?.start(); }, 260);
+  setTimeout(() => { d.classList.remove("closing"); d.close(); }, 260);
 }
 export { makeSheet };
 
@@ -176,11 +176,25 @@ function hoursSheet() {
     <p class="hours-note">Fermé les jours fériés. Une crevaison en dehors des horaires ? Laissez un message, on vous rappelle à l'ouverture.</p>
     <div class="wx-card" data-wx-card><p>Météo en cours de chargement…</p></div>
     <div class="sheet-actions">
-      <a class="btn btn-light btn-arrow" href="reserver.html">Prendre rendez-vous</a>
+      <a class="btn btn-violet btn-arrow" href="reserver.html">Prendre rendez-vous</a>
       <a class="btn btn-ghost" href="tel:${TEL}">Appeler le ${PHONE}</a>
-      <a class="btn btn-ghost" href="${MAPS}" target="_blank" rel="noopener">Itinéraire</a>
+      <button class="btn btn-ghost" type="button" data-open="route">Itinéraire</button>
     </div>`;
   renderWeather();
+  return d;
+}
+
+/* ---------------- Itinéraire ---------------- */
+const DEST = "9%20Rue%20Henri%20Becquerel%2C%2066330%20Cabestany";
+const ROUTES = [
+  ["Google Maps", MAPS],
+  ["Waze", `https://waze.com/ul?q=${DEST}&navigate=yes`],
+  ["Plans", `https://maps.apple.com/?daddr=${DEST}&dirflg=d`],
+];
+function routeSheet() {
+  const d = makeSheet("route-sheet", "Itinéraire", "9 Rue Henri Becquerel, 66330 Cabestany");
+  d.querySelector(".sheet-body").innerHTML = `<ul class="route-list">${ROUTES.map(([n, u]) => `<li><a class="route-a" href="${u}" target="_blank" rel="noopener">${n}</a></li>`).join("")}</ul>
+    <p class="route-note">L'application s'ouvre si elle est installée, sinon la carte s'ouvre dans le navigateur.</p>`;
   return d;
 }
 
@@ -219,12 +233,12 @@ const READ = {
 
 const FIGURE = `<svg viewBox="0 0 360 250" role="img" aria-label="Schéma d'une roue et de la coupe d'un pneu">
   <defs><marker id="rdA" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 8 4 0 8z" fill="currentColor"/></marker></defs>
-  <g color="#ffd600">
+  <g color="#b596ff">
   <circle cx="125" cy="140" r="98" fill="#0c0b0e" stroke="#3b3842" stroke-width="2"/>
   <circle cx="125" cy="140" r="98" fill="none" stroke="#1d1b21" stroke-width="10" stroke-dasharray="3 5"/>
   <circle cx="125" cy="140" r="58" fill="#2a2830" stroke="#4a4652"/>
   <circle cx="125" cy="140" r="16" fill="#3a3740"/>
-  <g class="g dim" data-k="radial" stroke="#b69cff" stroke-width="1.2">${Array.from({ length: 36 }, (_, i) => { const a = (i / 36) * Math.PI * 2; return `<line x1="${(125 + Math.cos(a) * 60).toFixed(1)}" y1="${(140 + Math.sin(a) * 60).toFixed(1)}" x2="${(125 + Math.cos(a) * 95).toFixed(1)}" y2="${(140 + Math.sin(a) * 95).toFixed(1)}"/>`; }).join("")}</g>
+  <g class="g dim" data-k="radial" stroke="#b596ff" stroke-width="1.2">${Array.from({ length: 36 }, (_, i) => { const a = (i / 36) * Math.PI * 2; return `<line x1="${(125 + Math.cos(a) * 60).toFixed(1)}" y1="${(140 + Math.sin(a) * 60).toFixed(1)}" x2="${(125 + Math.cos(a) * 95).toFixed(1)}" y2="${(140 + Math.sin(a) * 95).toFixed(1)}"/>`; }).join("")}</g>
   <g class="g dim" data-k="side" stroke="currentColor" stroke-width="2"><line x1="29" y1="140" x2="65" y2="140" marker-start="url(#rdA)" marker-end="url(#rdA)"/></g>
   <g class="g dim" data-k="rim" stroke="currentColor" stroke-width="2"><line x1="125" y1="84" x2="125" y2="196" marker-start="url(#rdA)" marker-end="url(#rdA)"/></g>
   <g class="g dim" data-k="load" stroke="currentColor" stroke-width="3"><line x1="125" y1="4" x2="125" y2="36" marker-end="url(#rdA)"/></g>
@@ -304,23 +318,28 @@ function readerSheet() {
 }
 
 /* ---------------- Menu (téléphone, tablette) ---------------- */
-function buildMenu(nav) {
+function buildMenu() {
+  const inHome = /(^|\/)(index\.html)?$/.test(location.pathname);
+  const h = (id) => (inHome ? `#${id}` : `index.html#${id}`);
   const menu = document.createElement("div");
   menu.className = "menu"; menu.id = "menu";
-  const links = $$(".nav-links > a, .nav-links > button", nav).map((a) => {
-    const el = a.cloneNode(true); el.classList.remove("is-active"); el.removeAttribute("data-nav-i");
-    el.querySelector(".new")?.remove();
-    return el.outerHTML;
-  }).join("");
-  menu.innerHTML = `<nav class="menu-links" aria-label="Menu">${links}</nav>
+  menu.innerHTML = `<nav class="menu-links" aria-label="Menu">
+      <a style="--i:0" href="${h("services")}">Services</a>
+      <a style="--i:1" href="pneus.html">Boutique pneus</a>
+      <a style="--i:2" href="${h("atelier")}">L'atelier</a>
+      <a style="--i:3" href="${h("garage")}">Le garage</a>
+      <button style="--i:4" type="button" data-open="reader">Lire son pneu</button>
+      <a style="--i:5" href="${h("contact")}">Contact</a>
+    </nav>
     <div class="menu-foot">
-      <button class="menu-card" type="button" data-open="hours"><small>Horaires</small><span><span class="live-dot" data-open-dot></span> <span data-open-text>…</span></span></button>
-      <a class="menu-card" href="tel:${TEL}"><small>Téléphone</small><span>${PHONE}</span></a>
-      <a class="menu-card" href="reserver.html"><small>En ligne</small><span>Prendre rendez-vous →</span></a>
-      <div class="menu-card"><small>Cabestany, maintenant</small><span><span data-clock>--:--</span> · <span data-wx-text>météo…</span></span></div>
+      <a class="btn btn-violet btn-arrow" href="reserver.html">Prendre rendez-vous</a>
+      <div class="menu-meta">
+        <button type="button" data-open="hours"><span class="live-dot" data-open-dot></span><span data-open-text>Horaires</span></button>
+        <a class="menu-tel" href="tel:${TEL}">${PHONE}</a>
+        <a href="${MAPS}" data-open="route" target="_blank" rel="noopener">9 Rue Henri Becquerel, Cabestany</a>
+      </div>
     </div>`;
   document.body.appendChild(menu);
-  menu.addEventListener("click", (e) => { if (e.target.closest("a, button")) document.documentElement.classList.remove("menu-open"); });
   return menu;
 }
 
@@ -330,15 +349,24 @@ export function initUI() {
   root.classList.add("js");
   const nav = $(".nav");
   if (nav) {
-    buildMenu(nav);
+    const menu = buildMenu();
     const burger = $(".nav-burger", nav);
-    burger?.addEventListener("click", () => {
-      const open = root.classList.toggle("menu-open");
-      burger.setAttribute("aria-expanded", String(open));
-      if (open) window.__lenis?.stop(); else window.__lenis?.start();
-    });
-    addEventListener("keydown", (e) => { if (e.key === "Escape" && root.classList.contains("menu-open")) { root.classList.remove("menu-open"); window.__lenis?.start(); } });
-    const onScroll = () => nav.classList.toggle("scrolled", scrollY > 40);
+    const setMenu = (open) => {
+      root.classList.toggle("menu-open", open);
+      burger?.setAttribute("aria-expanded", String(open));
+      burger?.setAttribute("aria-label", open ? "Fermer le menu" : "Menu");
+    };
+    burger?.addEventListener("click", () => setMenu(!root.classList.contains("menu-open")));
+    menu.addEventListener("click", (e) => { if (e.target.closest("a, button")) setMenu(false); });
+    addEventListener("keydown", (e) => { if (e.key === "Escape" && root.classList.contains("menu-open")) setMenu(false); });
+
+    // L'en-tête se fait discret quand on descend, revient dès qu'on remonte.
+    let lastY = scrollY;
+    const onScroll = () => {
+      const y = scrollY, dy = y - lastY;
+      nav.classList.toggle("scrolled", y > 24);
+      if (Math.abs(dy) > 6) { nav.classList.toggle("away", dy > 0 && y > innerHeight * 0.7); lastY = y; }
+    };
     addEventListener("scroll", onScroll, { passive: true }); onScroll();
   }
 
@@ -349,13 +377,26 @@ export function initUI() {
     const which = t.dataset.open;
     if (which === "hours") openSheet(hoursSheet());
     if (which === "reader") openSheet(readerSheet());
+    if (which === "route") openSheet(routeSheet());
   });
 
   // Plaques : AB-123-CD pendant la saisie
   $$("[data-plate]").forEach((inp) => inp.addEventListener("input", () => {
+    inp.setCustomValidity("");
     const raw = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (/^[A-Z]{2}\d{0,3}[A-Z]{0,2}$/.test(raw) && raw.length > 2) inp.value = raw.slice(0, 2) + "-" + raw.slice(2, 5) + (raw.length > 5 ? "-" + raw.slice(5, 7) : "");
     else if (inp.value !== inp.value.toUpperCase()) inp.value = inp.value.toUpperCase();
+  }));
+
+  // Les formulaires « plaque » de l'accueil : on ne part pas vers la réservation avec une plaque impossible.
+  $$('form[action="reserver.html"]').forEach((form) => form.addEventListener("submit", (e) => {
+    const inp = $("[data-plate]", form);
+    if (!inp) return;
+    const raw = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (/^[A-HJ-NP-TV-Z]{2}\d{3}[A-HJ-NP-TV-Z]{2}$/.test(raw) || /^\d{1,4}[A-Z]{1,3}(\d{2}|2A|2B)$/.test(raw)) return;
+    e.preventDefault();
+    inp.setCustomValidity("Format attendu : AB-123-CD ou 1234 AB 66");
+    inp.reportValidity();
   }));
 
   // Boutons aimantés (souris seulement)

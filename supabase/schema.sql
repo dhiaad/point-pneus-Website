@@ -156,6 +156,11 @@ begin
    where status in ('en_attente', 'confirme') and start_at < v_end and end_at > p_start;
   if v_used >= coalesce(v_capacity, 1) then raise exception 'creneau_indisponible'; end if;
 
+  -- Anti-spam : pas plus de 20 réservations en 10 minutes, tous numéros confondus.
+  if (select count(*) from public.bookings where created_at > now() - interval '10 minutes') >= 20 then
+    raise exception 'trop_de_rdv';
+  end if;
+
   -- Anti-abus : 3 rendez-vous à venir maximum par numéro de téléphone.
   if (select count(*) from public.bookings
        where regexp_replace(customer_phone, '\D', '', 'g') = v_digits
@@ -218,6 +223,10 @@ begin
   if length(trim(coalesce(p_name, ''))) not between 2 and 100 then raise exception 'nom_invalide'; end if;
   if length(v_digits) not between 10 and 15 then raise exception 'telephone_invalide'; end if;
   if jsonb_typeof(p_details) <> 'object' or length(p_details::text) > 3000 then raise exception 'details_invalides'; end if;
+  -- Anti-spam : pas plus de 20 demandes en 10 minutes, tous numéros confondus.
+  if (select count(*) from public.quote_requests where created_at > now() - interval '10 minutes') >= 20 then
+    raise exception 'trop_de_demandes';
+  end if;
   -- Anti-abus : 5 demandes par numéro et par jour.
   if (select count(*) from public.quote_requests
        where regexp_replace(customer_phone, '\D', '', 'g') = v_digits
@@ -233,6 +242,54 @@ $$;
 revoke all on function public.create_quote_request(text, jsonb, text, text) from public;
 grant execute on function public.create_quote_request(text, jsonb, text, text) to anon, authenticated;
 
+-- ---------- Mesure d'audience (visiteurs ayant accepté), anonyme : ni IP, ni cookie, ni identifiant ----------
+create table if not exists public.site_events (
+  id bigserial primary key,
+  created_at timestamptz not null default now(),
+  kind text not null check (kind in ('visite', 'page', 'plaque', 'panier', 'appel', 'itineraire', 'rdv')),
+  path text,
+  source text,
+  device text check (device in ('mobile', 'tablette', 'ordinateur'))
+);
+create index if not exists site_events_created_idx on public.site_events (created_at);
+alter table public.site_events enable row level security;
+-- Aucune règle : personne ne lit la table directement, tout passe par les deux fonctions ci-dessous.
+
+create or replace function public.track_event(p_kind text, p_path text, p_source text, p_device text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if p_kind not in ('visite', 'page', 'plaque', 'panier', 'appel', 'itineraire', 'rdv') then return; end if;
+  if p_device not in ('mobile', 'tablette', 'ordinateur') then return; end if;
+  -- Anti-abus : au-delà de 300 événements par minute, tout le site confondu, on n'enregistre plus.
+  if (select count(*) from public.site_events where created_at > now() - interval '1 minute') >= 300 then return; end if;
+  insert into public.site_events (kind, path, source, device)
+  values (p_kind, left(coalesce(p_path, '/'), 80), left(p_source, 40), p_device);
+end;
+$$;
+revoke all on function public.track_event(text, text, text, text) from public;
+grant execute on function public.track_event(text, text, text, text) to anon, authenticated;
+
+-- Lecture réservée au garage, déjà regroupée par jour.
+create or replace function public.admin_events(p_days int)
+returns jsonb
+language plpgsql stable security definer set search_path = public
+as $$
+begin
+  if not public.is_admin() then raise exception 'acces_refuse'; end if;
+  return coalesce((
+    select jsonb_agg(x) from (
+      select to_char(created_at at time zone 'Europe/Paris', 'YYYY-MM-DD') as d, kind, path, source, device, count(*) as n
+        from public.site_events
+       where created_at > now() - make_interval(days => least(p_days, 400))
+       group by 1, 2, 3, 4, 5
+    ) x), '[]'::jsonb);
+end;
+$$;
+revoke all on function public.admin_events(int) from public;
+grant execute on function public.admin_events(int) to authenticated;
+
 -- ---------- Effacement automatique (durées annoncées sur la page « Vos données ») ----------
 create or replace function public.purge_old_data()
 returns void
@@ -243,6 +300,7 @@ begin
   delete from public.bookings where start_at < now() - interval '3 years';
   delete from public.plate_cache where fetched_at < now() - interval '90 days';
   delete from public.plate_lookups where created_at < now() - interval '1 day';
+  delete from public.site_events where created_at < now() - interval '13 months';
   delete from auth.users
    where coalesce(last_sign_in_at, created_at) < now() - interval '3 years'
      and id not in (select user_id from public.admins);

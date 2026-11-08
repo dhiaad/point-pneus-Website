@@ -1,4 +1,4 @@
-// Pneu 205/55 R16 modélisé en vraie 3D : rainures en relief, flanc gravé, « POINT PNEUS » peint en jaune.
+// Pneu 205/55 R16 modélisé en vraie 3D : rainures en relief, flanc gravé, « POINT PNEUS » peint en blanc cassé.
 // Unité : rayon extérieur = 1 (316 mm pour un 205/55 R16).
 import * as THREE from "three";
 
@@ -172,7 +172,7 @@ function revolve(rows, cols, { displace, uv, colorOf, flipU = false }) {
 }
 
 // --- Textures du flanc --------------------------------------------------------------------
-function sidewallTextures(casing, size, { paint: brandPaint = "#f2c400", label = "205/55 R16 91V", line = "GUERIDO  ·  CABESTANY", brand = "POINT PNEUS" } = {}) {
+function sidewallTextures(casing, size, { paint: brandPaint = "#ece8df", dot = "#8a4dff", label = "205/55 R16 91V", line = "GUERIDO  ·  CABESTANY", brand = "POINT PNEUS" } = {}) {
   const W = size, H = size / 2;
   const make = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
   const bump = make(), color = make(), rough = make();
@@ -260,6 +260,13 @@ function sidewallTextures(casing, size, { paint: brandPaint = "#f2c400", label =
   text("MAX LOAD 615 KG", 0.6, 0.775, 0.02, { weight: 700, spacing: 0.12 });
   for (let k = 0; k < 6; k++) text("▲ TWI", k / 6 + 1 / 12, 0.888, 0.016, { weight: 700, spacing: 0.08 });
 
+  // Le point d'équilibrage : le repère peint qu'on trouve sur un vrai pneu, et le « point » de Point Pneus.
+  if (dot) {
+    const rad = 0.872, u = 0.355, y = yAtR(rad), px = W / (TAU * rad), py = H / L, R = 0.021 * px;
+    c.save(); c.translate(u * W, y); c.scale(1, py / px); c.fillStyle = dot; c.beginPath(); c.arc(0, 0, R, 0, TAU); c.fill(); c.restore();
+    r.save(); r.translate(u * W, y); r.scale(1, py / px); r.fillStyle = "rgb(0,120,0)"; r.beginPath(); r.arc(0, 0, R, 0, TAU); r.fill(); r.restore();
+  }
+
   const tex = (canvas, srgb) => {
     const t = new THREE.CanvasTexture(canvas);
     t.wrapS = THREE.RepeatWrapping;
@@ -295,30 +302,39 @@ function treadBumpTexture(size) {
   return t;
 }
 
-export function buildTire({ quality = 1, textureSize = 4096, pattern = null, paint, label, line, brand } = {}) {
+// La géométrie ne dépend que du dessin : un pneu du même type se construit presque instantanément.
+const SHARED_GEO = new Map(), SHARED_BUMP = new Map();
+
+export function buildTire({ quality = 1, textureSize = 4096, pattern = null, paint, dot, label, line, brand } = {}) {
   const q = quality;
   const cols = Math.round(2560 * q);
   const casingCols = Math.round(720 * q);
 
-  // Bande de roulement + épaules (les deux côtés)
-  const half = [...treadHalf(Math.round(110 * q)), ...shoulderHalf(Math.round(28 * q))];
-  const mirror = half.slice(1).map((p) => ({ ...p, z: -p.z, zn: -p.zn })).reverse();
-  const bandRows = [...mirror, ...half];
-  bandRows.forEach((row, i) => { row.v = i / (bandRows.length - 1); });
-  const bandGeo = revolve(bandRows, cols, {
-    displace: (theta, row) => -DEPTH * treadDepth(theta, row.zn, pattern) * row.w,
-    uv: (row) => row.v,
-    colorOf: (d) => 1 - 0.62 * (-d / DEPTH),
-  });
-
-  // Flancs
   const casing = casingFront(q);
-  const front = revolve(casing.rows, casingCols, { uv: (row) => row.v });
-  const backRows = casing.rows.map((p) => ({ ...p, z: -p.z }));
-  const back = revolve(backRows, casingCols, { uv: (row) => row.v, flipU: true });
+  const geoKey = `${q}|${JSON.stringify(pattern)}`;
+  if (!SHARED_GEO.has(geoKey)) {
+    // Bande de roulement + épaules (les deux côtés)
+    const half = [...treadHalf(Math.round(110 * q)), ...shoulderHalf(Math.round(28 * q))];
+    const mirror = half.slice(1).map((p) => ({ ...p, z: -p.z, zn: -p.zn })).reverse();
+    const bandRows = [...mirror, ...half];
+    bandRows.forEach((row, i) => { row.v = i / (bandRows.length - 1); });
+    const bandGeo = revolve(bandRows, cols, {
+      displace: (theta, row) => -DEPTH * treadDepth(theta, row.zn, pattern) * row.w,
+      uv: (row) => row.v,
+      colorOf: (d) => 1 - 0.62 * (-d / DEPTH),
+    });
+    // Flancs
+    const front = revolve(casing.rows, casingCols, { uv: (row) => row.v });
+    const backRows = casing.rows.map((p) => ({ ...p, z: -p.z }));
+    const back = revolve(backRows, casingCols, { uv: (row) => row.v, flipU: true });
+    SHARED_GEO.set(geoKey, { bandGeo, front, back });
+  }
+  const { bandGeo, front, back } = SHARED_GEO.get(geoKey);
 
-  const maps = sidewallTextures(casing, textureSize, { paint, label, line, brand });
-  const treadBump = treadBumpTexture(Math.min(4096, textureSize));
+  const maps = sidewallTextures(casing, textureSize, { paint, dot, label, line, brand });
+  const bumpSize = Math.min(4096, textureSize);
+  if (!SHARED_BUMP.has(bumpSize)) SHARED_BUMP.set(bumpSize, treadBumpTexture(bumpSize));
+  const treadBump = SHARED_BUMP.get(bumpSize);
 
   // Le caoutchouc est éclairé surtout par l'environnement : noir profond, reflets satinés.
   const rubber = { color: 0xffffff, roughness: 1, metalness: 0, envMapIntensity: 1, side: THREE.DoubleSide };
@@ -337,9 +353,8 @@ export function buildTire({ quality = 1, textureSize = 4096, pattern = null, pai
   group.add(bandMesh, frontMesh, backMesh);
   group.userData.boreRadius = BORE;
   group.userData.dispose = () => {
-    [bandGeo, front, back].forEach((g) => g.dispose());
     [sideMat, backMat, treadMat].forEach((m) => m.dispose());
-    Object.values(maps).forEach((t) => t.dispose()); treadBump.dispose();
+    Object.values(maps).forEach((t) => t.dispose());
   };
   return group;
 }

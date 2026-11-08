@@ -3,8 +3,8 @@
   "short_name": "Point Pneus",
   "start_url": "/",
   "display": "browser",
-  "background_color": "#FFD600",
-  "theme_color": "#FFD600",
+  "background_color": "#0a090c",
+  "theme_color": "#0a090c",
   "icons": [
     { "src": "assets/logo/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "assets/logo/icon-512.png", "sizes": "512x512", "type": "image/png" }

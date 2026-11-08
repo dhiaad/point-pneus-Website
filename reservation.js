@@ -553,6 +553,7 @@
     bad(fields.phone, !validPhone(c.phone));
     bad(fields.email, !validEmail(c.email.trim()));
     if (firstBad) { firstBad.focus(); return; }
+    if (window.BookingAPI.spam.suspect($("contact-form"))) { showError("s4-error", "Envoi impossible. Appelez le garage au 04 68 50 50 68."); return; }
 
     sending = true;
     nextBtn.disabled = true;

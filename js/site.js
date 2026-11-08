@@ -1,6 +1,7 @@
-// Point Pneus Guerido — accueil v2.
-// Pneu 3D qu'on traverse, pages qui glissent les unes sous les autres, voiture violette qui devient un plan.
-import { initUI, setActiveNav } from "./ui.js";
+// Point Pneus Guerido — accueil.
+// Pneu de studio dans le hero, apparitions au défilement, voiture qui devient un plan.
+import { initUI, setActiveNav } from "./ui.js?v=6";
+import { initAtelier } from "./atelier.js?v=1";
 
 const root = document.documentElement;
 const $ = (id) => document.getElementById(id);
@@ -8,97 +9,78 @@ const clamp01 = (x) => Math.min(1, Math.max(0, x));
 const range = (p, a, b) => clamp01((p - a) / (b - a));
 const lerp = (a, b, t) => a + (b - a) * t;
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
-const easeIn = (t) => t * t * t;
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const mobile = matchMedia("(max-width: 760px)").matches || matchMedia("(pointer: coarse)").matches;
+const mobile = false; // La 3D ne tourne qu'au-delà de 900 px : les téléphones ont les images fixes.
 const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
 const motion = root.classList.contains("motion");
 
 initUI();
+const atelier = initAtelier();
 $("year").textContent = String(new Date().getFullYear());
 
-/* ---------------- Les feuilles qui glissent ---------------- */
-const sheets = [...document.querySelectorAll(".pw")].map((pw) => ({ pw, page: pw.firstElementChild, rv: 1, last: "" }));
-const NAV_OF = { garage: "garage", atelier: "atelier", services: "services", infos: "infos", contact: "infos" };
-let navKey = null;
+/* ---------------- Titre du hero et apparitions ---------------- */
+const heroTitle = $("hero-title");
+(document.fonts?.ready || Promise.resolve()).then(() => requestAnimationFrame(() => heroTitle.classList.add("in")));
+setTimeout(() => heroTitle.classList.add("in"), 300);
 
-function updateSheets() {
-  const vh = innerHeight;
-  let current = null;
-  for (const s of sheets) {
-    const top = s.pw.getBoundingClientRect().top;
-    s.rv = motion ? clamp01(-top / vh) : top < vh * 0.5 ? 1 : 0;
-    if (s.rv >= 0.5) current = s;
-    if (!motion) continue;
-    const key = s.rv >= 1 ? "1" : s.rv.toFixed(3);
-    if (key === s.last) continue;
-    s.last = key;
-    if (s.rv >= 1) { s.page.style.transform = ""; s.page.style.setProperty("--veil", "0"); }
-    else {
-      const e = easeOut(s.rv);
-      s.page.style.transform = `scale(${(0.93 + 0.07 * e).toFixed(4)})`;
-      s.page.style.setProperty("--veil", ((1 - e) * 0.78).toFixed(3));
-    }
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+}, { rootMargin: "0px 0px 6% 0px", threshold: 0 });
+document.querySelectorAll("[data-reveal], [data-split]").forEach((el) => { if (el !== heroTitle) io.observe(el); });
+
+/* ---------------- Rubrique active dans l'en-tête ---------------- */
+const NAV_SECTIONS = ["services", "atelier", "garage", "contact"].map($);
+let navKey = null;
+// Une ligne à 40 % de la hauteur d'écran : aucun calcul pendant le défilement.
+const navIO = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (e.isIntersecting) navKey = e.target.id;
+    else if (navKey === e.target.id) navKey = null;
   }
-  const key = current ? NAV_OF[current.page.id] || null : null;
-  if (key !== navKey) { navKey = key; setActiveNav(key); }
-}
+  setActiveNav(navKey);
+}, { rootMargin: "-40% 0px -60% 0px" });
+NAV_SECTIONS.forEach((s) => navIO.observe(s));
 addEventListener("resize", () => setActiveNav(navKey));
 
-// Apparitions : seulement quand la feuille est vraiment découverte
-const pending = new Set(document.querySelectorAll("[data-reveal]"));
-const sheetOf = new Map();
-pending.forEach((el) => sheetOf.set(el, sheets.find((s) => s.pw.contains(el)) || null));
-function updateReveals() {
-  if (!pending.size) return;
-  const vh = innerHeight;
-  for (const el of pending) {
-    const s = sheetOf.get(el);
-    if (s && s.rv < 0.35) continue;
-    const r = el.getBoundingClientRect();
-    if (r.top < vh * 0.9 && r.bottom > 0) { el.classList.add("in"); pending.delete(el); }
-  }
-}
+/* ---------------- Barre fixe du téléphone : elle arrive quand les boutons du hero s'en vont ---------------- */
+new IntersectionObserver(([e]) => $("dock").classList.toggle("on", !e.isIntersecting)).observe($("hero-cta"));
 
-// Profondeur : les photos glissent à des vitesses différentes
-const depthEls = [...document.querySelectorAll("[data-depth]")];
-function updateDepth() {
-  const vh = innerHeight;
-  for (const el of depthEls) {
-    const r = el.parentElement.getBoundingClientRect();
-    if (r.bottom < -200 || r.top > vh + 200) continue;
-    const off = (r.top + r.height / 2 - vh / 2) * Number(el.dataset.depth);
-    el.style.transform = `translate3d(0, ${(-off).toFixed(1)}px, 0)`;
-  }
-}
+/* ---------------- Photo qui suit le service survolé ---------------- */
+if (fine) document.querySelectorAll(".sv-block").forEach((block) => {
+  const fig = block.querySelector(".sv-fig"), img = fig.querySelector("img");
+  let current = img.getAttribute("src").match(/([\w-]+)\.webp/)[1], timer;
+  const rows = [...block.querySelectorAll(".row[data-photo]")];
+  // Toutes les photos sont prêtes avant le premier survol : le changement ne bloque jamais la page.
+  const ready = [];
+  const prepare = () => [...new Set(rows.map((a) => a.dataset.photo))].forEach((n) => { const i = new Image(); i.src = `assets/photos/${n}.webp`; i.decode?.().catch(() => {}); ready.push(i); });
+  new IntersectionObserver(([e], o) => { if (e.isIntersecting) { o.disconnect(); prepare(); } }, { rootMargin: "60% 0px" }).observe(block);
+  rows.forEach((a) => a.addEventListener("pointerenter", () => {
+    clearTimeout(timer);
+    // Une courte attente : balayer la liste à la souris ne déclenche pas une photo par ligne.
+    timer = setTimeout(() => {
+      if (a.dataset.photo === current) return;
+      current = a.dataset.photo;
+      img.classList.add("swap");
+      setTimeout(() => { img.src = `assets/photos/${current}.webp`; img.classList.remove("swap"); }, 170);
+    }, 110);
+  }));
+});
 
-// Cartes qui s'inclinent sous la souris
-if (fine) {
-  document.querySelectorAll("[data-tilt]").forEach((c) => {
-    c.addEventListener("pointermove", (e) => {
-      const r = c.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-      c.style.setProperty("--ry", `${((x - 0.5) * 8).toFixed(2)}deg`);
-      c.style.setProperty("--rx", `${((0.5 - y) * 6).toFixed(2)}deg`);
-      c.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`);
-      c.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
-    });
-    c.addEventListener("pointerleave", () => { c.style.setProperty("--rx", "0deg"); c.style.setProperty("--ry", "0deg"); });
-  });
-}
+/* ---------------- La bande sponsor ne défile que lorsqu'elle est à l'écran ---------------- */
+new IntersectionObserver(([e]) => $("tape").classList.toggle("run", e.isIntersecting), { rootMargin: "10% 0px" }).observe($("tape"));
 
 /* ---------------- Liens internes ---------------- */
-let lenis = null;
+const instant = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const goTo = (y) => scrollTo({ top: y, behavior: instant ? "auto" : "smooth" });
+let finishDrive = null;
 function scrollToTarget(el) {
   if (!el) return;
-  let y;
-  if (el.id === "haut") y = 0;
-  else {
-    const s = sheets.find((x) => x.pw.contains(el));
-    const base = s ? s.pw.getBoundingClientRect().top + scrollY + (motion ? innerHeight : 0) : 0;
-    y = s && s.page !== el ? base + (el.getBoundingClientRect().top - s.page.getBoundingClientRect().top) - 90 : s ? base : el.getBoundingClientRect().top + scrollY;
-  }
-  if (lenis) lenis.scrollTo(y, { duration: 1.6 }); else scrollTo({ top: y, behavior: "smooth" });
+  // Un lien vers l'atelier ou plus bas : on replie d'abord l'animation, la cible est alors à sa place définitive.
+  const atelierEl = $("atelier");
+  if (finishDrive && (el === atelierEl || (atelierEl.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))) finishDrive(false);
+  if (el.id === "haut") return goTo(0);
+  const top = el.getBoundingClientRect().top + scrollY;
+  goTo(el.tagName === "SECTION" ? top : top - innerHeight * 0.3);
 }
 const SVC_CARD = { crevaison: "svc-crevaison", geometrie: "svc-geometrie", clim: "svc-clim", freins: "svc-freins", vidange: "svc-vidange", phares: "svc-meca" };
 document.addEventListener("click", (e) => {
@@ -110,39 +92,21 @@ document.addEventListener("click", (e) => {
   e.preventDefault();
   const card = a.dataset.svc ? $(SVC_CARD[a.dataset.svc]) : null;
   scrollToTarget(card || el);
-  if (card) setTimeout(() => { card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 1800); }, 1500);
+  if (card) setTimeout(() => { card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 1900); }, 1300);
 });
 
-function onScrollWork() { updateSheets(); updateReveals(); updateDepth(); }
+const heroStage = $("hero-stage");
 
-if (!motion) {
-  root.classList.add("loaded");
-  addEventListener("scroll", onScrollWork, { passive: true });
-  addEventListener("resize", onScrollWork);
-  onScrollWork();
-} else {
-  startMotion().catch((err) => {
-    console.error(err);
-    root.classList.remove("motion"); root.classList.add("static", "loaded");
-    addEventListener("scroll", onScrollWork, { passive: true });
-    onScrollWork();
-  });
+if (motion) {
+  // La page est lisible tout de suite ; la 3D s'installe ensuite, sans bloquer le titre.
+  const boot = () => startMotion().catch((err) => { console.error(err); root.classList.remove("motion"); root.classList.add("static"); });
+  const later = () => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(boot, { timeout: 1500 }) : boot()), 500);
+  if (document.readyState === "complete") later(); else addEventListener("load", later, { once: true });
 }
 
-/* ================= Animation 3D ================= */
+/* ================= Animation 3D (grand écran) ================= */
 async function startMotion() {
   const THREE = await import("three");
-  const { RoomEnvironment } = await import("three/addons/environments/RoomEnvironment.js");
-  const { buildTire } = await import("./tire.js?v=3");
-
-  let shown = 0, target = 0;
-  const countEl = $("loader-count");
-  const tick = () => { shown += (target - shown) * 0.18; countEl.textContent = String(Math.round(shown)); if (!root.classList.contains("loaded")) requestAnimationFrame(tick); };
-  tick();
-
-  lenis = window.Lenis ? new window.Lenis({ lerp: 0.09, wheelMultiplier: 0.95, smoothWheel: true }) : null;
-  window.__lenis = lenis;
-  lenis?.stop();
 
   const makeRenderer = (canvas, maxDpr) => {
     const r = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
@@ -152,115 +116,66 @@ async function startMotion() {
     r.setClearColor(0x000000, 0);
     return r;
   };
-
-  /* ----- Scène 1 : le pneu ----- */
-  const intro = $("intro"), introStage = intro.querySelector(".intro-stage"), lightLayer = $("intro-light");
-  const tireRenderer = makeRenderer($("gl-tire"), mobile ? 1.75 : 2);
-  const tireScene = new THREE.Scene();
-  const pmrem = new THREE.PMREMGenerator(tireRenderer);
-  tireScene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  const tireCam = new THREE.PerspectiveCamera(30, 1, 0.01, 60);
-  const rim = new THREE.SpotLight(0xc9b6ff, 110, 14, 0.6, 0.6);
-  rim.position.set(2.8, 2.6, -2.6);
-  const rim2 = new THREE.SpotLight(0xffe6c8, 40, 14, 0.7, 0.7);
-  rim2.position.set(-3, -2, -2.4);
-  const keyLight = new THREE.DirectionalLight(0xfff3e4, 0.5);
-  keyLight.position.set(-3, 3, 4);
-  tireScene.add(rim, rim.target, rim2, rim2.target, keyLight);
-
-  target = 12;
-  await document.fonts.load('800 100px "Archivo"').catch(() => {});
-  target = 30;
-  await new Promise((r) => setTimeout(r, 30));
-  const tire = buildTire({ quality: mobile ? 0.55 : 1, textureSize: mobile ? 2048 : 4096 });
-  tireScene.add(tire);
-  target = 82;
-
-  const BORE = tire.userData.boreRadius;
-  let d0 = 6;
-  const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
-  if (fine) addEventListener("pointermove", (e) => { pointer.x = e.clientX / innerWidth - 0.5; pointer.y = e.clientY / innerHeight - 0.5; }, { passive: true });
-
-  const sizeTire = () => {
-    const w = introStage.clientWidth, h = introStage.clientHeight;
-    tireRenderer.setSize(w, h, false);
-    tireCam.aspect = w / h; tireCam.updateProjectionMatrix();
-    const halfMin = Math.tan(THREE.MathUtils.degToRad(tireCam.fov / 2)) * Math.min(1, tireCam.aspect);
-    d0 = (tireCam.aspect < 1 ? 1.22 : 1.56) / halfMin;
-  };
-  sizeTire();
+  const tmp = new THREE.Vector3();
 
   // Aperçu figé d'un moment de l'animation : ?vue=atelier:0.6 (section:avancement), pour les captures.
   const vueParam = new URLSearchParams(location.search).get("vue");
   const forced = vueParam ? { id: vueParam.split(":")[0], p: Number(vueParam.split(":")[1] || 0) } : null;
   const sectionProgress = (el) => {
-    if (forced) return forced.id === el.id ? { p: forced.p, visible: true } : { p: 0, visible: false };
+    if (forced) return forced.id === el.id ? { p: forced.p, visible: true, past: false } : { p: 0, visible: false, past: false };
     const r = el.getBoundingClientRect();
     const total = r.height - innerHeight;
-    return { p: total > 0 ? clamp01(-r.top / total) : 0, visible: r.bottom > 0 && r.top < innerHeight };
+    return { p: total > 0 ? clamp01(-r.top / total) : 0, visible: r.bottom > 0 && r.top < innerHeight, past: r.bottom <= 0 };
   };
 
-  const ring = Array.from({ length: 16 }, (_, i) => new THREE.Vector3(Math.cos((i / 16) * Math.PI * 2) * BORE * 0.99, Math.sin((i / 16) * Math.PI * 2) * BORE * 0.99, 0));
-  const tmp = new THREE.Vector3();
-  let spin = 0, lastScroll = scrollY;
-
+  /* ----- Le pneu du hero ----- */
+  const { createHeroTire, HERO_SPIN } = await import("./hero-tire.js?v=3");
+  const hero = await createHeroTire($("gl-tire"), { dpr: Math.min(devicePixelRatio, 1.75), quality: 0.55, textureSize: 2048 });
+  const sizeTire = () => hero.size(heroStage.clientWidth);
+  sizeTire();
+  const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
+  if (fine) addEventListener("pointermove", (e) => { pointer.x = e.clientX / innerWidth - 0.5; pointer.y = e.clientY / innerHeight - 0.5; }, { passive: true });
+  let spin = HERO_SPIN, lastScroll = scrollY;
+  let tireClock = 0, tireSamples = 0, tireSpent = 0, tireLowered = false;
   function updateTire(dt) {
-    const { p, visible } = sectionProgress(intro);
-    if (!visible) return;
-    const turn = easeInOut(range(p, 0, 0.5));
-    pointer.sx += (pointer.x - pointer.sx) * 0.05; pointer.sy += (pointer.y - pointer.sy) * 0.05;
     const v = scrollY - lastScroll; lastScroll = scrollY;
-    spin += dt * 0.12 + v * 0.0009;
-    tire.rotation.set(lerp(0.14, 0, turn) + pointer.sy * 0.08 * (1 - turn), lerp(-0.62, 0, turn) + pointer.sx * 0.12 * (1 - turn), 0);
-    tire.rotateZ(spin);
-    const t = range(p, 0.08, 0.86);
-    const z = -0.5 + (d0 + 0.5) * Math.pow(1 - t, 1.7);
-    tireCam.position.set(0, 0, z);
-    tireCam.lookAt(0, 0, z - 1);
-    tire.visible = z > 0.06;
-
-    const w = introStage.clientWidth, h = introStage.clientHeight;
-    if (!tire.visible) lightLayer.style.clipPath = "none";
-    else {
-      tire.updateMatrixWorld();
-      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-      for (const q of ring) {
-        tmp.copy(q).applyMatrix4(tire.matrixWorld).project(tireCam);
-        const x = (tmp.x + 1) / 2 * w, y = (1 - tmp.y) / 2 * h;
-        minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    if (scrollY > innerHeight * 1.15) return;
+    const dx = pointer.x - pointer.sx, dy = pointer.y - pointer.sy;
+    pointer.sx += dx * 0.05; pointer.sy += dy * 0.05;
+    spin -= dt * 0.05 + v * 0.0011;
+    // Le pneu tourne lentement : au repos, 30 images par seconde suffisent et libèrent la carte graphique.
+    tireClock += dt;
+    if (v === 0 && Math.abs(dx) + Math.abs(dy) < 0.002 && dt > 0 && tireClock < 1 / 30) return;
+    tireClock = 0;
+    hero.render(spin, pointer.sx * 0.1, pointer.sy * 0.05);
+    if (!tireLowered && dt > 0) {
+      tireSamples++; tireSpent += dt;
+      if (tireSamples >= 40) {
+        if (tireSpent / tireSamples > 0.04) { tireLowered = true; hero.renderer.setPixelRatio(1); sizeTire(); hero.render(spin, pointer.sx * 0.1, pointer.sy * 0.05); }
+        tireSamples = 0; tireSpent = 0;
       }
-      lightLayer.style.clipPath = `ellipse(${((maxX - minX) / 2).toFixed(1)}px ${((maxY - minY) / 2).toFixed(1)}px at ${((minX + maxX) / 2).toFixed(1)}px ${((minY + maxY) / 2).toFixed(1)}px)`;
     }
-    introStage.style.setProperty("--copy-op", (1 - range(p, 0.04, 0.26)).toFixed(3));
-    introStage.style.setProperty("--spread", easeIn(range(p, 0, 0.34)).toFixed(3));
-    lightLayer.style.setProperty("--mark-scale", lerp(0.4, 1, easeOut(range(p, 0.1, 0.9))).toFixed(3));
-    lightLayer.style.setProperty("--chips-op", range(p, 0.84, 0.96).toFixed(3));
-    if (tire.visible) tireRenderer.render(tireScene, tireCam);
-    else tireRenderer.clear();
   }
-
   updateTire(0);
-  target = 100;
-  await new Promise((r) => setTimeout(r, 450));
-  countEl.textContent = "100";
-  root.classList.add("loaded");
-  lenis?.start();
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add("tire-live")));
 
-  /* ----- Scène 2 : la voiture violette ----- */
+  /* ----- La voiture violette ----- */
   const drive = $("atelier"), driveStage = $("drive-stage");
-  const carRenderer = makeRenderer($("gl-car"), mobile ? 1.5 : 1.6);
+  const carRenderer = makeRenderer($("gl-car"), 1.5);
   carRenderer.localClippingEnabled = true;
+  carRenderer.toneMapping = THREE.NeutralToneMapping;   // garde le violet des boutons, sans le délaver
   const carScene = new THREE.Scene();
   carScene.environment = new THREE.PMREMGenerator(carRenderer).fromScene(studioEnvironment(THREE), 0.02).texture;
-  const sun = new THREE.DirectionalLight(0xfff4e6, 1.2);
+  const sun = new THREE.DirectionalLight(0xffffff, 1);
   sun.position.set(-4, 10, 3);
   carScene.add(sun);
   const carCam = new THREE.PerspectiveCamera(16, 1, 0.5, 200);
   carCam.up.set(0, 0, -1);
-  const carState = { ready: false, car: null, length: 4.4, width: 2.3, lines: null, glows: [], anchors: [] };
+  const carState = { ready: false, car: null, model: null, length: 4.4, width: 2.3, lines: null, glows: [], anchors: [], lit: {}, trails: null };
+  const layout = { m: 48, B: 230, g: 64, cx: 0, carW: 0, shift: 0, right: 0, single: false };
   const clipCar = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   const clipPlan = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
-  let halfH = 3, dirty = true;
+  let halfH = 3, dirty = true, placeDirty = true;
 
   const sizeCar = () => {
     const w = driveStage.clientWidth, h = driveStage.clientHeight;
@@ -273,70 +188,190 @@ async function startMotion() {
     const d = halfH / Math.tan(THREE.MathUtils.degToRad(carCam.fov / 2));
     carCam.position.set(0, d, 0);
     carCam.lookAt(0, 0, 0);
-    dirty = true;
+    // Composition finale : zones, plan, fiche de la prestation.
+    layout.single = w < 1180;
+    layout.m = Math.max(24, w * 0.04);
+    layout.B = w < 1560 ? (w < 1180 ? 164 : 190) : 230;
+    layout.g = w < 1180 ? 40 : 64;
+    layout.carW = (carState.width / (2 * halfH * carCam.aspect)) * w;
+    layout.cx = layout.m + layout.B + layout.g + layout.carW / 2;
+    layout.shift = (layout.cx / w * 2 - 1) * halfH * carCam.aspect;
+    layout.right = layout.cx + layout.carW / 2 + layout.g;
+    const apLeft = layout.single ? layout.right : layout.right + layout.B + (w < 1560 ? 36 : 64);
+    driveStage.style.setProperty("--ap-left", `${apLeft.toFixed(0)}px`);
+    driveStage.style.setProperty("--co-w", `${layout.B}px`);
+    driveStage.classList.toggle("compact", w < 1180 || h < 700);
+    dirty = true; placeDirty = true;
   };
   sizeCar();
 
   const VIOLET = new THREE.Color(0xa47bff);
-  const glowTexture = () => {
+  const glowTexture = (mid = "200,170,255", out = "120,60,255") => {
     const c = document.createElement("canvas"); c.width = c.height = 128;
     const g = c.getContext("2d"), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-    gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.25, "rgba(200,170,255,0.75)"); gr.addColorStop(1, "rgba(120,60,255,0)");
+    gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.25, `rgba(${mid},0.75)`); gr.addColorStop(1, `rgba(${out},0)`);
     g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
     return new THREE.CanvasTexture(c);
   };
 
+  // Le téléchargement ne gêne pas la page ; le décodage, lui, attend qu'on approche de l'atelier.
+  let carFile = null;
+  const fetchCar = () => (carFile ||= fetch("assets/3d/car-concept.glb?v=2").then((r) => r.arrayBuffer()));
+  // Les étapes lourdes attendent une pause dans le défilement : rien ne saute pendant qu'on lit la page.
+  let lastMove = 0;
+  addEventListener("scroll", () => { lastMove = performance.now(); }, { passive: true });
+  const quiet = (max = 1500) => new Promise((done) => {
+    const start = performance.now();
+    const check = () => (performance.now() - lastMove > 200 || performance.now() - start > max ? setTimeout(done, 0) : setTimeout(check, 60));
+    check();
+  });
   const loadCarScene = async () => {
-    const { loadCar, buildBlueprint } = await import("./car.js?v=3");
-    const res = await loadCar("assets/3d/car-concept.glb", { variant: "Pearly Swirly" });
+    const { loadCar, buildBlueprint, createTailTrails, createHeadBars } = await import("./car.js?v=9");
+    const file = await fetchCar();
+    await quiet();
+    const res = await loadCar(file, { variant: "Pearly Swirly" });
+    // La voiture prend le violet des boutons du site ; l'habitacle et les vitres s'effacent dans le noir.
     res.model.traverse((o) => {
       if (!o.isMesh) return;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
       mats.forEach((m) => {
         if (/Paint/i.test(m.name)) {
-          m.color.set(0x5a2fc2); m.metalness = 0.72; m.roughness = 0.3;
-          if ("clearcoat" in m) { m.clearcoat = 1; m.clearcoatRoughness = 0.04; }
-          if ("iridescence" in m) m.iridescence = 0.25;
+          m.color.set(0x7a3cff); m.metalness = 0.5; m.roughness = 0.3;
+          if ("clearcoat" in m) { m.clearcoat = 1; m.clearcoatRoughness = 0.05; }
+          if ("iridescence" in m) m.iridescence = 0;
+          if ("sheen" in m) m.sheen = 0;
+          if ("specularIntensity" in m) { m.specularIntensity = 1; m.specularColor?.set(0xffffff); }
+          m.envMapIntensity = 1.3;
         }
-        if (/Headlight|Brakelight|Signallight/i.test(m.name)) {
-          m.emissive = VIOLET.clone(); m.emissiveIntensity = /Head/i.test(m.name) ? 2.2 : 3;
-          m.color.set(0x8b5cf6);
+        if (/^Glass$/.test(m.name)) {
+          // Pas de réfraction : elle oblige à redessiner toute la scène à chaque image.
+          m.transmission = 0; m.transparent = true; m.opacity = 0.74; m.color.set(0x08070b); m.roughness = 0.03; m.metalness = 0; m.depthWrite = false; m.envMapIntensity = 1.5;
         }
+        if (/Interior 3 Pearl/.test(m.name)) m.color.set(0x24222a);
+        if (/^Mirror$/.test(m.name)) { m.color.set(0x1d1c21); m.metalness = 0.4; m.roughness = 0.2; }
+        if (/^Rim2$/.test(m.name)) { m.color.set(0x77747f); m.roughness = 0.28; }
+        if (/Dashboard/.test(m.name)) m.emissiveIntensity = 0;
+        if (/Headlight/i.test(m.name)) { m.color.set(0xffffff); m.emissive?.set(0xffffff); m.emissiveIntensity = 1.6; }
+        if (/Brakelight|Signallight/i.test(m.name)) { m.color.set(0x7a3cff); m.emissive?.set(0x7a3cff); m.emissiveIntensity = 2.4; }
         m.clippingPlanes = [clipCar];
         m.needsUpdate = true;
       });
+      if (/WindshieldWipers/.test(o.name)) o.visible = false;
     });
-    const bp = await buildBlueprint(res.model, { color: 0xe4dcf6, opacity: 0.5, threshold: 34, glow: /Headlight|Taillight|Turnsignal/i, glowColor: 0xb794ff });
-    bp.material.clippingPlanes = [clipPlan];
-    bp.glowMaterial.clippingPlanes = [clipPlan];
+    const bp = await buildBlueprint(res.model, { color: 0xf1ede5, opacity: 0.8, width: 1.25, threshold: 38,
+      skip: /^Interior(?!SeatsColor|DashMid)|^Engine$|^Axles$|^BodyUnderside$|^BodyWindshieldWipers|^BodyHood(Interior|Under|Topgrill)|Handle|BrakePad|BrakeDisc|License_Plate/,
+      tiers: [
+        { test: /^Interior/, opacity: 0.2, threshold: 46 },
+        { test: /^Wheel|Tire/, opacity: 0.42, threshold: 46 },
+        { test: /Window|Windshield|Rearwindow/, opacity: 0.5, width: 1, threshold: 38 },
+      ],
+      lights: [
+        { test: /Headlight|TurnsignalsFront/i, color: 0xffffff, width: 1 },
+        { test: /Taillight|TurnsignalsRear/i, color: 0x9a6bff, width: 1 },
+      ] });
+    bp.materials.forEach((m) => { m.clippingPlanes = [clipPlan]; });
     res.car.add(bp.lines);
 
-    // Halos violets sur les feux du plan
-    const tex = glowTexture();
+    // Chaque zone du plan peut s'allumer : une copie des pièces, en violet, au-dessus du dessin.
+    const ZONE_PARTS = { pneus: /^Wheel(Front|Rear)[LR]$/, crevaison: /^WheelRearL$/, geometrie: /^WheelFront[LR]$/, freins: /^Wheel(Front|Rear)[LR]Brake(Disc|Pad)$/, phares: /^BodyHeadlights$/, moteur: /^Engine$/, clim: /^InteriorDash(Mid|Sides)$/ };
     res.model.updateMatrixWorld(true);
-    const box = new THREE.Box3();
-    res.model.traverse((o) => {
-      if (!o.isMesh || !/BodyHeadlights|BodyTaillights$/.test(o.name)) return;
-      box.setFromObject(o);
-      const c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
-      for (const sx of [-1, 1]) {
-        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0xb794ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, clippingPlanes: [clipPlan], opacity: 0.95 }));
-        sp.position.set(c.x + sx * size.x * 0.36, c.y + 0.4, c.z);
-        sp.scale.setScalar(Math.max(0.55, size.z * 2.6));
-        res.car.add(sp); carState.glows.push(sp);
+    const litRoot = new THREE.Group();
+    res.car.add(litRoot);
+    const litParts = [];
+    res.model.traverse((o) => { if (o.isMesh && o.visible) litParts.push(o); });
+    const addLit = (o) => {
+      for (const [z, re] of Object.entries(ZONE_PARTS)) {
+        let n = o, hit = false;
+        while (n && n !== res.model) { if (re.test(n.name)) { hit = true; break; } n = n.parent; }
+        if (!hit) continue;
+        const zone = carState.lit[z] ??= (() => {
+          const group = new THREE.Group(); group.visible = false; litRoot.add(group);
+          return {
+            level: 0, group,
+            fill: new THREE.MeshBasicMaterial({ color: 0x7a3cff, transparent: true, opacity: 0, depthTest: false, depthWrite: false, side: THREE.DoubleSide, clippingPlanes: [clipPlan] }),
+            edge: new THREE.LineBasicMaterial({ color: 0xcdb6ff, transparent: true, opacity: 0, depthTest: false, depthWrite: false, clippingPlanes: [clipPlan] }),
+          };
+        })();
+        const m = new THREE.Mesh(o.geometry, zone.fill); m.matrixAutoUpdate = false; m.matrix.copy(o.matrixWorld); m.renderOrder = 3;
+        const e = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 34), zone.edge); e.matrixAutoUpdate = false; e.matrix.copy(o.matrixWorld); e.renderOrder = 4;
+        zone.group.add(m, e);
       }
+    };
+    await new Promise((done) => {
+      let i = 0;
+      const slice = () => {
+        const until = performance.now() + 8;
+        while (i < litParts.length && performance.now() < until) addLit(litParts[i++]);
+        if (i < litParts.length) setTimeout(slice, 0); else done();
+      };
+      slice();
     });
+    // Ces pièces ne se voient jamais de dessus, même à travers les vitres : on ne les dessine plus.
+    res.model.traverse((o) => {
+      if (o.isMesh && /^Axles$|BrakePad|^InteriorPedal/.test(/^mesh_/.test(o.name) ? o.parent?.name || "" : o.name)) o.visible = false;
+    });
+
+    // Les feux du plan : phares d'un blanc franc, arrière violet et ses traînées.
+    const box = new THREE.Box3();
+    res.model.updateMatrixWorld(true);
+    const nodeBox = (name) => { let n = null; res.model.traverse((o) => { if (!n && o.name === name) n = o; }); return n ? new THREE.Box3().setFromObject(n) : null; };
+    const whiteTex = glowTexture("255,255,255", "255,255,255"), violetTex = glowTexture();
+    const addSprite = (map, color, x, y, z, sx, sy, op) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map, color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, clippingPlanes: [clipPlan], toneMapped: false, opacity: op }));
+      sp.position.set(x, y, z); sp.scale.set(sx, sy, 1); sp.userData.op = op; sp.renderOrder = 6;
+      res.car.add(sp); carState.glows.push(sp);
+    };
+    const beamTexture = () => {
+      const c = document.createElement("canvas"); c.width = 128; c.height = 256;
+      const g = c.getContext("2d");
+      const v = g.createLinearGradient(0, 256, 0, 0);
+      v.addColorStop(0, "rgba(255,255,255,0.8)"); v.addColorStop(0.4, "rgba(255,255,255,0.24)"); v.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = v; g.fillRect(0, 0, 128, 256);
+      g.globalCompositeOperation = "destination-in";
+      const h = g.createLinearGradient(0, 0, 128, 0);
+      h.addColorStop(0, "rgba(0,0,0,0)"); h.addColorStop(0.5, "rgba(0,0,0,1)"); h.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = h; g.fillRect(0, 0, 128, 256);
+      return new THREE.CanvasTexture(c);
+    };
+    const head = nodeBox("BodyHeadlights");
+    if (head) {
+      const c = head.getCenter(new THREE.Vector3()), size = head.getSize(new THREE.Vector3());
+      const beamMap = beamTexture();
+      const y = c.y + 0.5;
+      res.car.add(createHeadBars({ y, z: c.z - size.z * 0.1, half: size.x / 2, clip: [clipPlan] }));
+      for (const sx of [-1, 1]) {
+        const x = c.x + sx * size.x * 0.36;
+        addSprite(whiteTex, 0xffffff, x, y, c.z - size.z * 0.1, 0.5, 0.5, 0.6);
+        const len = 1.25, geo = new THREE.PlaneGeometry(0.42, len, 1, 1);
+        const pos = geo.attributes.position;
+        for (let i = 0; i < pos.count; i++) if (pos.getY(i) > 0) pos.setX(i, pos.getX(i) * 2.4);
+        const beam = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: beamMap, color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide, clippingPlanes: [clipPlan], toneMapped: false, opacity: 0.42 }));
+        beam.rotation.x = -Math.PI / 2;
+        beam.position.set(x + sx * 0.05, y, c.z - size.z * 0.1 - len / 2);
+        beam.userData.op = 0.42; beam.renderOrder = 6;
+        res.car.add(beam); carState.glows.push(beam);
+      }
+    }
+    const tail = nodeBox("BodyTaillights");
+    if (tail) {
+      const c = tail.getCenter(new THREE.Vector3()), size = tail.getSize(new THREE.Vector3());
+      const y = c.y + 0.3;
+      for (const sx of [-1, 1]) addSprite(violetTex, 0x7a3cff, c.x + sx * size.x * 0.36, y, c.z - 0.02, 0.56, 0.56, 0.5);
+      carState.trails = createTailTrails({ y, z: c.z + 0.02, half: size.x / 2 + 0.02, length: 3.2 });
+      res.car.add(carState.trails.group);
+    }
 
     // Points d'ancrage des services, dans le repère de la voiture
     const anchors = [];
-    document.querySelectorAll("#callouts .co").forEach((el, i) => {
+    document.querySelectorAll("#callouts .co[data-anchor]").forEach((el, i) => {
       let node = null;
       res.model.traverse((o) => { if (!node && o.name === el.dataset.anchor) node = o; });
       if (!node) return;
       box.setFromObject(node);
       const c = box.getCenter(new THREE.Vector3());
       c.y = Math.max(c.y, 0.3);
-      anchors.push({ el, i, local: c });
+      if (el.dataset.z === "phares") c.x += box.getSize(new THREE.Vector3()).x * 0.36;
+      anchors.push({ el, i, local: c, hs: document.querySelector(`.hs[data-z="${el.dataset.z}"]`) });
     });
     carState.anchors = anchors;
 
@@ -351,16 +386,28 @@ async function startMotion() {
     res.car.add(shadow);
 
     carScene.add(res.car);
-    Object.assign(carState, { car: res.car, length: res.length, width: Math.min(res.width, 2.35), lines: bp.lines });
+    Object.assign(carState, { car: res.car, model: res.model, length: res.length, width: Math.min(res.width, 2.35), lines: bp.lines });
     sizeCar();
-    // Shaders et textures préparés avant que la voiture n'arrive à l'écran : pas d'à-coup au premier passage.
-    res.car.position.z = halfH * 3;
+    await quiet();
+    // Shaders, formes et textures partent vers la carte graphique avant que la voiture n'arrive : pas d'à-coup au premier passage.
     if (carRenderer.compileAsync) await carRenderer.compileAsync(carScene, carCam).catch(() => {});
+    await quiet();
+    const warm = new THREE.WebGLRenderTarget(32, 32);
+    clipCar.constant = clipPlan.constant = 1e4;
+    carState.glows.forEach((g) => { g.visible = true; });
+    carState.lines.visible = true;
+    carRenderer.setRenderTarget(warm);
     carRenderer.render(carScene, carCam);
+    carRenderer.setRenderTarget(null);
+    warm.dispose();
+    clipCar.constant = clipPlan.constant = 0;
     carState.ready = true; dirty = true;
   };
   const startCarLoad = (() => { let started = false; return () => { if (started) return; started = true; loadCarScene().catch((e) => console.error("voiture", e)); }; })();
-  setTimeout(startCarLoad, mobile ? 2200 : 700);
+  // Tout se prépare pendant que le visiteur regarde le haut de page, pas pendant qu'il descend.
+  if (!navigator.connection?.saveData) setTimeout(() => fetchCar().then(startCarLoad).catch(() => {}), 1800);
+  const nearCar = new IntersectionObserver(([en]) => { if (en.isIntersecting) { nearCar.disconnect(); startCarLoad(); } }, { rootMargin: "200% 0px" });
+  nearCar.observe(drive);
 
   // Légendes reliées aux pièces
   const callouts = [...document.querySelectorAll("#callouts .co")];
@@ -368,14 +415,13 @@ async function startMotion() {
   const NS = "http://www.w3.org/2000/svg";
   const groups = callouts.map((el, i) => {
     const gEl = document.createElementNS(NS, "g");
-    gEl.innerHTML = `<path class="ln"/><circle class="ring" r="7"/><circle class="dot" r="${mobile ? 8 : 4}"/>${mobile ? `<text class="num">${i + 1}</text>` : ""}`;
+    gEl.innerHTML = `<path class="ln"/>`;
+    gEl.classList.toggle("on", el.dataset.z === atelier.current);
     lineSvg.appendChild(gEl);
-    el.addEventListener("pointerenter", () => gEl.classList.add("hot"));
-    el.addEventListener("pointerleave", () => gEl.classList.remove("hot"));
-    el.addEventListener("focus", () => gEl.classList.add("hot"));
-    el.addEventListener("blur", () => gEl.classList.remove("hot"));
     return gEl;
   });
+  atelier.onChange((z) => { groups.forEach((g, i) => g.classList.toggle("on", callouts[i].dataset.z === z)); dirty = true; });
+  atelier.onHot((z) => groups.forEach((g, i) => g.classList.toggle("hot", callouts[i].dataset.z === z)));
 
   function placeCallouts(op) {
     const w = driveStage.clientWidth, h = driveStage.clientHeight;
@@ -384,109 +430,154 @@ async function startMotion() {
     for (const a of carState.anchors) {
       tmp.copy(a.local).add(pos).project(carCam);
       a.x = (tmp.x + 1) / 2 * w; a.y = (1 - tmp.y) / 2 * h;
-      const side = Math.abs(a.local.x) > 0.15 ? (a.x < w / 2 ? "l" : "r") : a.el.dataset.side;
+      const side = layout.single ? "l" : a.local.x < -0.15 ? "l" : a.local.x > 0.15 ? "r" : a.el.dataset.side;
       cols[side].push(a);
     }
-    if (!mobile) {
-      const boxW = 230, gap = 66;
-      for (const side of ["l", "r"]) {
-        const list = cols[side].sort((p, q) => p.y - q.y);
-        list.forEach((a, k) => { a.ly = Math.max(a.y, k ? list[k - 1].ly + gap : 150); });
-        for (let k = list.length - 1; k >= 0; k--) list[k].ly = Math.min(list[k].ly, h - 110 - (list.length - 1 - k) * gap);
-        list.forEach((a) => {
-          const lx = side === "l" ? Math.max(24, w * 0.06) : w - Math.max(24, w * 0.06) - boxW;
-          a.el.style.left = `${lx}px`; a.el.style.top = `${a.ly}px`;
-          const edge = side === "l" ? lx + boxW - 6 : lx + 6;
-          const knee = side === "l" ? edge + 34 : edge - 34;
-          a.path = `M${a.x.toFixed(1)} ${a.y.toFixed(1)} L${knee.toFixed(1)} ${a.ly.toFixed(1)} L${edge.toFixed(1)} ${a.ly.toFixed(1)}`;
-        });
-      }
+    const { m, B, right } = layout;
+    for (const side of ["l", "r"]) {
+      const list = cols[side].sort((p, q) => p.y - q.y);
+      if (!list.length) continue;
+      const top = 160, bottom = h - 90;
+      // Chaque libellé garde sa vraie hauteur : ceux qui passent sur deux lignes ne mordent plus sur le voisin.
+      list.forEach((a) => { if (placeDirty || !a.h) a.h = a.el.offsetHeight; });
+      const space = (p, q) => (p.h + q.h) / 2 + 10;
+      list.forEach((a, k) => { a.ly = Math.max(a.y, k ? list[k - 1].ly + space(list[k - 1], a) : top); });
+      for (let k = list.length - 1; k >= 0; k--) list[k].ly = Math.min(list[k].ly, k === list.length - 1 ? bottom : list[k + 1].ly - space(list[k], list[k + 1]));
+      list.forEach((a) => {
+        const lx = side === "l" ? m : right;
+        a.el.style.left = `${lx}px`; a.el.style.top = `${a.ly}px`;
+        const edge = side === "l" ? lx + B : lx;
+        const knee = side === "l" ? edge + 22 : edge - 22;
+        a.path = `M${a.x.toFixed(1)} ${a.y.toFixed(1)} L${knee.toFixed(1)} ${a.ly.toFixed(1)} L${edge.toFixed(1)} ${a.ly.toFixed(1)}`;
+      });
     }
     carState.anchors.forEach((a) => {
-      const gEl = groups[a.i];
-      const o = op[a.i];
+      const gEl = groups[a.i], o = op[a.i], ln = gEl.querySelector(".ln");
       gEl.style.opacity = o.toFixed(3);
-      gEl.querySelector(".ln").setAttribute("d", mobile ? "" : a.path);
-      for (const c of gEl.querySelectorAll("circle")) { c.setAttribute("cx", a.x.toFixed(1)); c.setAttribute("cy", a.y.toFixed(1)); }
-      const t = gEl.querySelector("text"); if (t) { t.setAttribute("x", a.x.toFixed(1)); t.setAttribute("y", a.y.toFixed(1)); }
-      const ln = gEl.querySelector(".ln");
-      if (!mobile && ln.getTotalLength) { const L = ln.getTotalLength(); ln.style.strokeDasharray = `${L}`; ln.style.strokeDashoffset = `${(L * (1 - o)).toFixed(1)}`; }
+      ln.setAttribute("d", a.path);
+      if (ln.getTotalLength) { const L = ln.getTotalLength(); ln.style.strokeDasharray = `${L}`; ln.style.strokeDashoffset = `${(L * (1 - o)).toFixed(1)}`; }
       a.el.style.setProperty("--o", o.toFixed(3));
       a.el.style.pointerEvents = o > 0.5 ? "auto" : "none";
       a.el.tabIndex = o > 0.5 ? 0 : -1;
+      if (a.hs) { a.hs.style.left = `${a.x.toFixed(1)}px`; a.hs.style.top = `${a.y.toFixed(1)}px`; a.hs.style.setProperty("--o", o.toFixed(3)); a.hs.style.pointerEvents = o > 0.5 ? "auto" : "none"; }
     });
   }
 
   // Avancement lissé : la voiture glisse au lieu de suivre chaque cran de molette.
-  let sp = 0, done = false, lastSp = -1;
+  let sp = 0, done = false, lastSp = -1, lastPlaced = -1, collapsed = false;
+  let samples = 0, sampleTime = 0, lowered = false;
+
+  // Une fois l'animation vue, la section reprend la hauteur d'un écran : remonter redevient immédiat.
+  function collapseDrive(hold) {
+    if (collapsed || forced) return;
+    collapsed = true; done = true;
+    const y = scrollY, top = drive.getBoundingClientRect().top + y;
+    const total = drive.offsetHeight - innerHeight;
+    const delta = Math.max(0, Math.min(y - top, total));
+    root.classList.add("drive-done");
+    scrollTo({ top: y - delta, behavior: "instant" });
+    if (hold && delta > 0) {
+      // L'élan de la molette ne doit pas emporter le visiteur au-delà du plan qui vient de s'ouvrir.
+      const stop = (ev) => ev.preventDefault();
+      addEventListener("wheel", stop, { passive: false });
+      setTimeout(() => removeEventListener("wheel", stop), 380);
+    }
+    dirty = true;
+  }
+  finishDrive = collapseDrive;
+
+  const scanEl = $("scan");
+  let stageH = driveStage.clientHeight, lastScanOp = "";
+  addEventListener("resize", () => { stageH = driveStage.clientHeight; });
+  const applied = new Map();
+  const setOp = (el, v) => { if (applied.get(el) !== v) { applied.set(el, v); el.style.opacity = v; } };
+  const titleEl = $("drive-title"), subEl = driveStage.querySelector(".drive-sub"), headEl = driveStage.querySelector(".drive-head"), apEl = $("ap-panel");
+  let flowClock = 0;
+
   function updateDrive(dt) {
-    const { p, visible } = sectionProgress(drive);
+    const { p, visible, past } = sectionProgress(drive);
+    if (past && !collapsed) collapseDrive(false);
     if (!visible && !forced) return;
-    if (sectionProgress(intro).p > 0.45 || p > 0) startCarLoad();
-    sp += (p - sp) * (1 - Math.exp(-dt * 7));
+    startCarLoad();
+    sp += (p - sp) * (1 - Math.exp(-dt * 13));
     if (Math.abs(p - sp) < 0.0004) sp = p;
-    if (sp >= 0.92) done = true;
+    if (sp >= 0.96) done = true;
+    if (done && !collapsed && sp >= 0.96) collapseDrive(true);
     const e = done ? 1 : sp;
+    // La zone choisie monte en lumière, l'ancienne s'éteint.
+    const planOn = range(e, 0.78, 0.88) > 0.5;
+    for (const [z, zone] of Object.entries(carState.lit)) {
+      const target = planOn && z === atelier.current ? 1 : 0;
+      if (Math.abs(target - zone.level) > 0.004) { zone.level += (target - zone.level) * (1 - Math.exp(-dt * 11)); dirty = true; }
+      else zone.level = target;
+      zone.group.visible = zone.level > 0.01;
+      zone.fill.opacity = zone.level * 0.3;
+      zone.edge.opacity = zone.level;
+    }
+    // La traînée file en continu tant que le plan est à l'écran : 30 images par seconde suffisent.
+    if (carState.trails?.on && !document.hidden) {
+      flowClock += dt;
+      if (flowClock >= 1 / 30) { carState.trails.tick(flowClock, carRenderer.domElement.height); flowClock = 0; dirty = true; }
+    }
     if (Math.abs(e - lastSp) < 0.0002 && !dirty) return;
+    const moved = Math.abs(e - lastSp) >= 0.0002;
     lastSp = e; dirty = false;
 
-    const s = driveStage.style;
-    s.setProperty("--title-op", (1 - range(e, 0.3, 0.4)).toFixed(3));
-    s.setProperty("--title-spread", easeIn(range(e, 0.26, 0.42)).toFixed(3));
+    const titleOp = (1 - range(e, 0.4, 0.5)).toFixed(3), coOp = range(e, 0.78, 0.88).toFixed(2);
+    setOp(titleEl, titleOp); setOp(subEl, titleOp); setOp(headEl, coOp); setOp(apEl, coOp);
     const wipe = easeInOut(range(e, 0.46, 0.76));
-    s.setProperty("--bp", wipe.toFixed(3));
-    s.setProperty("--co-op", range(e, 0.78, 0.88).toFixed(3));
+    driveStage.classList.toggle("ap-on", planOn);
     if (!carState.ready) { carRenderer.clear(); return; }
 
     const L = carState.length, car = carState.car;
     const centerZ = mobile ? -halfH * 0.2 : 0;
     const enter = easeOut(range(e, 0, 0.32));
     car.position.z = lerp(halfH + L * 0.62, centerZ, enter);
-    car.position.x = Math.sin(enter * Math.PI) * 0.18;
+    car.position.x = lerp(Math.sin(enter * Math.PI) * 0.18, layout.shift, easeInOut(range(e, 0.66, 0.86)));
     car.rotation.y = Math.sin(enter * Math.PI) * -0.05 * (1 - enter * 0.6);
     const zc = car.position.z + lerp(-L / 2 - 0.25, L / 2 + 0.25, wipe);
     clipCar.constant = -zc;
     clipPlan.constant = zc;
     carState.lines.visible = wipe > 0;
-    const pulse = 0.85 + Math.sin(performance.now() / 600) * 0.1;
-    carState.glows.forEach((g) => { g.visible = wipe > 0; g.material.opacity = pulse; });
+    carState.model.visible = wipe < 1;           // la voiture pleine n'est plus dessinée une fois le plan complet
+    carState.glows.forEach((g) => { g.visible = wipe > 0; g.material.opacity = g.userData.op; });
+    if (carState.trails) carState.trails.set(easeOut(range(e, 0.74, 0.92)));
     const scanOn = wipe > 0 && wipe < 1;
-    if (scanOn) { tmp.set(0, 0, zc).project(carCam); s.setProperty("--scan-y", `${((1 - tmp.y) / 2 * driveStage.clientHeight).toFixed(1)}px`); }
-    s.setProperty("--scan-op", scanOn ? Math.sin(Math.PI * wipe).toFixed(3) : "0");
+    if (scanOn) { tmp.set(0, 0, zc).project(carCam); scanEl.style.transform = `translateY(${((1 - tmp.y) / 2 * stageH).toFixed(1)}px)`; }
+    const scanOp = scanOn ? Math.sin(Math.PI * wipe).toFixed(2) : "0";
+    if (scanOp !== lastScanOp) { scanEl.style.opacity = scanOp; lastScanOp = scanOp; }
     carRenderer.render(carScene, carCam);
-    placeCallouts(callouts.map((_, i) => range(e, 0.78 + i * 0.018, 0.84 + i * 0.018)));
+    // Si la machine peine pendant l'animation, on baisse la définition pour garder le mouvement.
+    if (!lowered && moved && carState.ready) {
+      samples++; sampleTime += dt;
+      if (samples >= 24) {
+        if (sampleTime / samples > 0.024) { lowered = true; carRenderer.setPixelRatio(1); sizeCar(); carRenderer.render(carScene, carCam); }
+        samples = 0; sampleTime = 0;
+      }
+    }
+    if (e >= 0.76 && (Math.abs(e - lastPlaced) > 0.0002 || placeDirty)) {
+      placeCallouts(callouts.map((_, i) => range(e, 0.78 + i * 0.018, 0.84 + i * 0.018)));
+      lastPlaced = e; placeDirty = false;
+    }
   }
 
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    lenis?.raf(now);
-    onScrollWork();
     updateTire(dt);
     updateDrive(dt);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 
-  if (forced) {
-    $("loader").style.display = "none";
-    const stage = document.getElementById(forced.id)?.querySelector(".intro-stage, .drive-stage");
-    if (stage) {
-      stage.style.cssText += ";position:fixed;inset:0;z-index:25";
-      document.getElementById(forced.id).closest(".pw")?.style.setProperty("z-index", "20");
-      sizeTire(); sizeCar();
-    } else {
-      const t = document.getElementById(forced.id);
-      const pw = t?.closest(".pw");
-      if (pw) setTimeout(() => scrollTo(0, pw.getBoundingClientRect().top + scrollY + innerHeight), 50);
-      document.querySelectorAll("[data-reveal]").forEach((el) => el.classList.add("in"));
-    }
-    if (forced.id === "atelier") startCarLoad();
+  if (forced?.id === "atelier") {
+    driveStage.style.cssText += ";position:fixed;inset:0;z-index:25";
+    sizeCar(); startCarLoad();
   }
 
   let resizeTimer;
   addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { sizeTire(); sizeCar(); }, 120); });
-  window.__pp = { THREE, tire, tireCam, carState, carCam, lenis };
+  window.__pp = { THREE, hero, carState, carCam, carRenderer, carScene, atelier };
 }
 
 // Éclairage « studio auto » : longues boîtes à lumière, reflets propres sur la carrosserie.

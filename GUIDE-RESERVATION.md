@@ -149,3 +149,11 @@ Les horaires sont aussi vérifiés dans `create_booking` (`supabase/schema.sql`)
 Choix faits : paiement au garage (pas de prépaiement en ligne), compte client facultatif,
 annulation en ligne jusqu'à 2 h avant, 3 rendez-vous à venir maximum par numéro de téléphone.
 Les données sont effacées automatiquement selon les durées de la page `confidentialite.html`.
+
+## Mise en ligne sur OVH
+
+1. Dans le Manager OVH, activez le certificat SSL du domaine **avant** d'envoyer le fichier `.htaccess` : c'est lui qui force le HTTPS.
+2. Envoyez le site sans `supabase/`, `graphify-out/`, `.git/`, `.claude/` ni les fichiers `GUIDE-*.md`.
+3. Si la base Supabase existe déjà, relancez `supabase/schema.sql` : il crée la mesure des visites (`site_events`, `track_event`, `admin_events`) et les plafonds anti-spam. Il peut être relancé sans perdre les données.
+4. Les clés privées (fournisseur de plaques, Brevo, `service_role`) vont uniquement dans les secrets des Edge Functions Supabase. Seules `supabaseUrl` et la clé publique `anon` vont dans `booking-config.js`.
+5. Une fois en ligne, déclarez `https://www.point-pneus-guerido.com/sitemap.xml` dans Google Search Console.
