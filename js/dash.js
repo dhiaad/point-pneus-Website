@@ -33,16 +33,38 @@ const OFFSET_MIN = -7, OFFSET_MAX = 21;
 
 /* ---------------- Connexion ---------------- */
 $("demo-banner").hidden = !isDemo;
+const VIEWS = { tableau: "dashboard", boutique: "view-boutique", qamar: "view-qamar" };
+let signedIn = false, shownView = null;
+function route() {
+  if (!signedIn) return;
+  const v = VIEWS[location.hash.slice(1)] ? location.hash.slice(1) : "tableau";
+  for (const [k, id] of Object.entries(VIEWS)) $(id).hidden = k !== v;
+  document.querySelectorAll("[data-view]").forEach((a) => { if (a.dataset.view === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  document.body.classList.toggle("q-night", v === "qamar");
+  document.querySelector('meta[name="theme-color"]').content = v === "qamar" ? "#07060f" : "#f5f3ee";
+  if (shownView !== v) scrollTo(0, 0);
+  shownView = v;
+  if (v === "tableau" && chartData.length) drawChart(chartData);
+  if (v === "boutique") import("./admin-shop.js?v=1").then((m) => m.openShopAdmin());
+  if (v === "qamar") import("./qamar.js?v=3").then((m) => m.openQamar());
+}
+addEventListener("hashchange", route);
+
 async function start() {
   const user = await api.getUser().catch(() => null);
+  signedIn = false; shownView = null;
   $("login").hidden = Boolean(user);
   $("garage-user").hidden = !user;
-  $("dashboard").hidden = true;
+  Object.values(VIEWS).forEach((id) => { $(id).hidden = true; });
+  $("d-tabs").hidden = true;
+  document.body.classList.remove("q-night");
   $("denied").hidden = true;
   if (!user) return;
   $("admin-email").textContent = user.email || "";
   if (!(await api.isAdmin())) { $("denied").hidden = false; return; }
-  $("dashboard").hidden = false;
+  signedIn = true;
+  $("d-tabs").hidden = false;
+  route();
   $("demo-tools").hidden = !isDemo;
   $("b-day").value = keyOf(new Date());
   load();
@@ -415,7 +437,7 @@ if (isDemo) {
   $("demo-clear").addEventListener("click", (e) => {
     const b = e.currentTarget;
     if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Tout effacer ?"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "Vider"; }, 4000); return; }
-    for (const k of ["pp-demo-bookings", "pp-demo-quotes", "pp-demo-blocks", "pp-demo-events"]) { try { localStorage.removeItem(k); } catch (x) { /* rien */ } }
+    for (const k of ["pp-demo-bookings", "pp-demo-quotes", "pp-demo-blocks", "pp-demo-events", "pp-demo-qamar"]) { try { localStorage.removeItem(k); } catch (x) { /* rien */ } }
     b.dataset.sure = ""; b.textContent = "Vider";
     load();
   });
@@ -486,6 +508,11 @@ function seedDemo() {
     try { localStorage.setItem(k, JSON.stringify(cur.concat(rows))); } catch (x) { /* rien */ }
   };
   merge("pp-demo-bookings", out); merge("pp-demo-quotes", quotes); merge("pp-demo-blocks", blocks);
+  merge("pp-demo-qamar", [
+    { id: "SEEDM1", kind: "probleme", priority: "haute", page: "Boutique", description: "Exemple de démo : le prix d'un pneu ne se met pas à jour sur téléphone.", attachment: null, status: "en_cours", created_at: new Date(now - 2 * DAY).toISOString() },
+    { id: "SEEDM2", kind: "amelioration", priority: "normale", page: "Accueil", description: "Exemple de démo : ajouter les horaires d'été dans le bas de page.", attachment: null, status: "recue", created_at: new Date(now - 5 * 36e5).toISOString() },
+    { id: "SEEDM3", kind: "demande", priority: "basse", page: "Rendez-vous", description: "Exemple de démo : changer l'ordre des prestations proposées.", attachment: null, status: "terminee", created_at: new Date(now - 9 * DAY).toISOString() },
+  ]);
 
   // Fréquentation d'exemple, seulement en mode démo : le gérant voit à quoi ressemblera son tableau de bord.
   {

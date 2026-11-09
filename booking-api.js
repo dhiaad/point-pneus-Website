@@ -85,6 +85,12 @@
     return null;
   }
 
+  // Écriture qui prévient si le navigateur n'a plus de place (photos, fichiers joints).
+  function demoWrite(key, value) {
+    try { window.localStorage.setItem(key, JSON.stringify(value)); }
+    catch (e) { throw new BookingError("storage_full", "Stockage plein"); }
+  }
+
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const s = document.createElement("script");
@@ -212,6 +218,15 @@
     },
     async adminDeleteBlock(id) {
       store("local", "pp-demo-blocks", (store("local", "pp-demo-blocks") || []).filter((b) => b.id !== id));
+    },
+    async products() { return store("local", "pp-demo-products"); },
+    async adminSaveProducts(list) { await wait(120); demoWrite("pp-demo-products", list); },
+    async qamarList() { return (store("local", "pp-demo-qamar") || []).slice().sort((a, b) => b.created_at.localeCompare(a.created_at)); },
+    async qamarCreate(r) {
+      await wait(400);
+      const row = { ...r, id: "QM" + Date.now(), status: "recue", created_at: new Date().toISOString() };
+      demoWrite("pp-demo-qamar", [...(store("local", "pp-demo-qamar") || []), row]);
+      return row;
     },
   };
 
@@ -349,6 +364,32 @@
         const sb = await client();
         const { error } = await sb.from("blocked_slots").delete().eq("id", id);
         check(error, "network");
+      },
+      async products() {
+        const sb = await client();
+        const { data, error } = await sb.from("products").select("id,position,data").order("position");
+        check(error, "network");
+        return data.length ? data.map((r) => ({ ...r.data, id: r.id })) : null;
+      },
+      async adminSaveProducts(list) {
+        const sb = await client();
+        const rows = list.map(({ id, ...data }, position) => ({ id, position, data, updated_at: new Date().toISOString() }));
+        const { error } = await sb.from("products").upsert(rows);
+        check(error, "network");
+        const { error: gone } = await sb.from("products").delete().not("id", "in", `(${list.map((p) => `"${p.id}"`).join(",")})`);
+        check(gone, "network");
+      },
+      async qamarList() {
+        const sb = await client();
+        const { data, error } = await sb.from("dev_requests").select("*").order("created_at", { ascending: false }).limit(100);
+        check(error, "network");
+        return data;
+      },
+      async qamarCreate(r) {
+        const sb = await client();
+        const { data, error } = await sb.from("dev_requests").insert(r).select().single();
+        check(error, "qamar_failed");
+        return data;
       },
     };
   }

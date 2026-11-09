@@ -2,6 +2,7 @@
 // Appelée par deux « Database Webhooks » Supabase :
 //   - table bookings, événements INSERT et UPDATE
 //   - table quote_requests, événement INSERT
+//   - table dev_requests, événement INSERT (Qamar : e-mail aux développeurs, à l'adresse DEV_EMAIL)
 //
 // Ce qu'elle envoie :
 //   - nouveau rendez-vous  → e-mail au garage (+ SMS si GARAGE_SMS est rempli) et accusé de réception au client
@@ -12,6 +13,7 @@
 //   BREVO_API_KEY    clé API Brevo (brevo.com > SMTP & API > Clés API)
 //   SENDER_EMAIL     adresse d'expédition validée dans Brevo, ex. rdv@point-pneus-guerido.com
 //   GARAGE_EMAIL     adresse qui reçoit les alertes, ex. pointpneusguerido@free.fr
+//   DEV_EMAIL        adresse des développeurs, qui reçoit les demandes Qamar
 //   GARAGE_SMS       (facultatif) portable du garage au format 33612345678
 //   WEBHOOK_SECRET   mot de passe choisi, recopié dans l'en-tête des webhooks : Authorization: Bearer <secret>
 //   SITE_URL         ex. https://www.point-pneus-guerido.com
@@ -129,6 +131,14 @@ async function newQuote(q: Row) {
   await sendSms(`Devis ${q.kind}: ${q.customer_name} ${q.customer_phone}`);
 }
 
+async function newDevRequest(r: Row) {
+  const kinds: Record<string, string> = { demande: "Demande", amelioration: "Amélioration", probleme: "Problème" };
+  await sendEmail(env("DEV_EMAIL"), `Qamar · ${kinds[r.kind] ?? r.kind} · ${r.page} · priorité ${r.priority}`, layout("Nouvelle demande Qamar", `
+    <p><b>${esc(kinds[r.kind] ?? r.kind)}</b> · ${esc(r.page)} · priorité ${esc(r.priority)}</p>
+    <p style="white-space:pre-line">${esc(r.description)}</p>
+    ${r.attachment ? `<p>Fichier joint : ${esc(r.attachment.name)}, à voir dans Supabase &gt; dev_requests.</p>` : ""}`));
+}
+
 Deno.serve(async (req) => {
   if (req.headers.get("authorization") !== `Bearer ${env("WEBHOOK_SECRET")}` || !env("WEBHOOK_SECRET")) {
     return new Response("unauthorized", { status: 401 });
@@ -139,6 +149,7 @@ Deno.serve(async (req) => {
     if (payload.table === "bookings" && payload.type === "INSERT") await newBooking(payload.record);
     else if (payload.table === "bookings" && payload.type === "UPDATE") await statusChanged(payload.record, payload.old_record ?? {});
     else if (payload.table === "quote_requests" && payload.type === "INSERT") await newQuote(payload.record);
+    else if (payload.table === "dev_requests" && payload.type === "INSERT") await newDevRequest(payload.record);
   } catch (e) {
     console.error(e);
   }

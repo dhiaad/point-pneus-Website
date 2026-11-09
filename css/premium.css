@@ -109,7 +109,7 @@
 
 /* ---------- L'atelier : le plan interactif ---------- */
 .drive { position: relative; background: var(--black); }
-.motion .drive { height: 300vh; }
+.motion .drive { height: 480vh; overflow-anchor: none; }
 .motion.drive-done .drive { height: auto; }
 .drive-stage { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: radial-gradient(48% 56% at 50% 50%, #201e25 0%, #131216 58%, var(--black) 100%); }
 .motion .drive-stage { position: sticky; top: 0; }

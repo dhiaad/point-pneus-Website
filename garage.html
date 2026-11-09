@@ -10,7 +10,8 @@
   <link rel="icon" href="assets/logo/icone.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/kit.css?v=10">
-  <link rel="stylesheet" href="css/dash.css?v=6">
+  <link rel="stylesheet" href="css/dash.css?v=8">
+  <link rel="stylesheet" href="css/qamar.css?v=4">
 </head>
 <body class="dash">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -21,6 +22,11 @@
     <a class="d-logo" href="index.html" aria-label="Retour au site">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 869.76 222" fill="currentColor" aria-hidden="true" focusable="false"><use href="#pp-mark" width="200" height="222"/><g transform="translate(207 72) scale(0.86)"><path d="M0 0H22V100H0Z"/><path fill-rule="evenodd" d="M22 0H40A34 34 0 0 1 40 68H22Z M22 22H40A12 12 0 0 1 40 46H22Z"/><path fill-rule="evenodd" d="M83 50A47 47 0 1 0 177 50A47 47 0 1 0 83 50ZM105 50A25 25 0 1 0 155 50A25 25 0 1 0 105 50Z"/><path d="M186 34H208V100H186Z"/><path d="M185 12A12 12 0 1 0 209 12A12 12 0 1 0 185 12Z"/><path d="M217 100V35A35 35 0 0 1 287 35V100H265V35A13 13 0 0 0 239 35V100Z"/><path d="M296 0H354V22H296Z"/><path d="M304 0H326V64A14 14 0 0 0 340 78H354V100H340A36 36 0 0 1 304 64Z"/><path d="M388 0H410V100H388Z"/><path fill-rule="evenodd" d="M410 0H428A34 34 0 0 1 428 68H410Z M410 22H428A12 12 0 0 1 428 46H410Z"/><path d="M471 100V35A35 35 0 0 1 541 35V100H519V35A13 13 0 0 0 493 35V100Z"/><path d="M616 0H586A36 36 0 0 0 550 36V64A36 36 0 0 0 586 100H616V78H586A14 14 0 0 1 572 64V61H610V39H572V36A14 14 0 0 1 586 22H616Z"/><path d="M625 0H647V65A13 13 0 0 0 673 65V0H695V65A35 35 0 0 1 625 65Z"/><path d="M766 0H730A26 26 0 0 0 704 26V35A26 26 0 0 0 730 61H739A5 5 0 0 1 744 66V73A5 5 0 0 1 739 78H704V100H740A26 26 0 0 0 766 74V65A26 26 0 0 0 740 39H731A5 5 0 0 1 726 34V27A5 5 0 0 1 731 22H766Z"/></g></svg>
     </a>
+    <nav class="d-tabs" id="d-tabs" hidden aria-label="Rubriques de l'espace gérant">
+      <a href="#tableau" data-view="tableau">Tableau de bord</a>
+      <a href="#boutique" data-view="boutique">Boutique</a>
+      <a href="#qamar" data-view="qamar"><i class="d-moon" aria-hidden="true"></i>Qamar</a>
+    </nav>
     <div class="d-top-right">
       <div class="d-user" id="garage-user" hidden>
         <span class="d-email" id="admin-email"></span>
@@ -137,10 +143,134 @@
         </div>
       </section>
     </div>
+    <!-- Boutique : les produits, leurs prix, leur présence en vitrine -->
+    <div class="pa" id="view-boutique" hidden>
+      <div class="hello">
+        <div>
+          <h1>Boutique</h1>
+          <p class="hello-sum" id="pa-sum"></p>
+        </div>
+        <div class="pa-top"><a class="d-link" href="pneus.html" target="_blank" rel="noopener">Voir la boutique</a><button class="d-btn" type="button" id="pa-add">Ajouter un produit</button></div>
+      </div>
+      <p class="gate-demo pa-demo" id="pa-demo" hidden>Mode démo : vos changements s'appliquent à la boutique, mais seulement dans ce navigateur.</p>
+      <section class="card" aria-label="Produits de la boutique">
+        <div class="pa-tools">
+          <label class="field pa-search"><span class="sr-only">Rechercher un produit</span><input id="pa-q" type="search" placeholder="Marque, modèle ou dimension"></label>
+          <label class="field pa-filter"><span class="sr-only">Catégorie</span><select id="pa-cat"></select></label>
+          <p class="pa-status" id="pa-status" role="status"></p>
+        </div>
+        <div id="pa-list"></div>
+      </section>
+      <p class="pa-reset" id="pa-reset-row" hidden><button class="d-link" type="button" id="pa-reset">Rétablir le catalogue d'origine</button></p>
+      <dialog class="pa-dlg" id="pa-dlg" aria-labelledby="pa-form-t">
+        <form id="pa-form" novalidate>
+          <header class="pa-dlg-h"><h2 id="pa-form-t">Ajouter un produit</h2><button class="d-link" type="button" data-pa-close>Fermer</button></header>
+          <div class="pa-fields">
+            <label class="field"><span>Marque</span><input name="brand" maxlength="40" autocomplete="off" required></label>
+            <label class="field"><span>Modèle</span><input name="model" maxlength="60" autocomplete="off" required></label>
+            <label class="field"><span>Catégorie</span><select name="cat"></select></label>
+            <label class="field"><span>Dimension</span><input name="size" maxlength="30" autocomplete="off" placeholder="205/55 R16 91V" required></label>
+            <label class="field"><span>Prix (€)</span><input name="price" type="text" inputmode="decimal" autocomplete="off" required></label>
+            <label class="field"><span>Vendu</span><select name="unit"><option value="pneu">Au pneu, posé</option><option value="lot">Le lot de 4</option></select></label>
+            <label class="field full"><span>Description</span><textarea name="desc" rows="3" maxlength="300"></textarea></label>
+            <label class="field full"><span>Points forts, séparés par des virgules</span><input name="tags" maxlength="80" autocomplete="off" placeholder="Confort, Longévité"></label>
+            <div class="field full"><span>Photo (facultative)</span>
+              <div class="pa-photo-row">
+                <div class="pa-photo-view" id="pa-photo-view" hidden><img alt="Aperçu de la photo"><button class="d-link" type="button" id="pa-photo-rm">Retirer</button></div>
+                <label class="d-btn d-btn-line pa-photo-btn">Choisir une image<input id="pa-photo" type="file" accept="image/*"></label>
+              </div>
+            </div>
+            <label class="pa-check full"><input name="shown" type="checkbox" checked><span>Afficher en vitrine</span></label>
+          </div>
+          <p class="form-err" id="pa-form-err" role="alert" hidden></p>
+          <footer class="pa-dlg-f"><button class="d-btn d-btn-text" type="button" data-pa-close>Annuler</button><button class="d-btn" type="submit" id="pa-save">Ajouter à la boutique</button></footer>
+        </form>
+      </dialog>
+    </div>
+
+    <!-- Qamar : écrire aux développeurs du site -->
+    <section class="qamar" id="view-qamar" hidden aria-labelledby="q-title">
+      <div class="q-scene" aria-hidden="true">
+        <canvas class="q-stars" id="q-stars"></canvas>
+        <div class="q-twinkle" id="q-twinkle"></div>
+        <div class="q-cl q-cl-back" id="q-cl-back"><canvas></canvas><canvas></canvas></div>
+        <div class="q-moon-box"><div class="q-halo"></div><canvas id="q-moon"></canvas></div>
+        <div class="q-cl q-cl-front" id="q-cl-front"><canvas></canvas><canvas></canvas></div>
+        <svg class="q-land" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax slice">
+          <defs>
+            <linearGradient id="q-g-far" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a5192"/><stop offset="1" stop-color="#2a2452"/></linearGradient>
+            <linearGradient id="q-g-mid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d2757"/><stop offset="1" stop-color="#171436"/></linearGradient>
+            <linearGradient id="q-g-near" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0a18"/><stop offset="1" stop-color="#05040b"/></linearGradient>
+            <linearGradient id="q-g-mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a798e6" stop-opacity="0"/><stop offset=".7" stop-color="#a798e6" stop-opacity=".3"/><stop offset="1" stop-color="#a798e6" stop-opacity="0"/></linearGradient>
+            <radialGradient id="q-g-glow"><stop offset="0" stop-color="#c8b9ff" stop-opacity=".5"/><stop offset="1" stop-color="#c8b9ff" stop-opacity="0"/></radialGradient>
+          </defs>
+          <path id="q-far" fill="url(#q-g-far)"/><path id="q-far-rim" fill="none" stroke="#e6dcff" stroke-opacity=".42" stroke-width="1.2"/>
+          <rect x="0" y="120" width="1600" height="130" fill="url(#q-g-mist)"/>
+          <path id="q-mid" fill="url(#q-g-mid)"/><path id="q-mid-rim" fill="none" stroke="#d6caff" stroke-opacity=".24" stroke-width="1"/>
+          <rect x="0" y="200" width="1600" height="140" fill="url(#q-g-mist)"/>
+          <ellipse cx="704" cy="248" rx="190" ry="96" fill="url(#q-g-glow)"/>
+          <g transform="translate(704 305) scale(.6)" fill="#07060f" style="filter:drop-shadow(0 0 1.4px rgba(222,212,255,.9))">
+            <path class="w-tail" d="M-60-24C-88-32-122-22-140 4C-128 2-124 10-112 8C-104 14-92 8-84 10C-72 8-62 4-54-2Z"/>
+            <path class="w-chest" d="M-60 6C-78-8-84-36-68-58C-60-70-50-80-42-86L-38-82L-30-96L-26-92L-16-108L-10-118L32-116L41-106L35-100L43-88L36-82L39-66L33-58L36-8C36-3 40-2 48-2L50 6L18 6L17-3C19-16 19-34 17-46C10-38 2-34-8-34C-4-24 0-12 10-7C15-4 20-3 21 6Z"/>
+            <g class="w-head">
+              <path d="M-18-104C-20-120-16-134-8-146L-30-168L-6-160L-22-184L2-170C8-176 14-182 20-188L40-208C46-213 53-210 52-203C51-198 47-194 43-190L26-170C28-162 28-156 28-152L38-146L32-132L42-124L34-108Z"/>
+              <path class="w-jaw" d="M24-168L40-186C44-188 46-184 44-180L32-156C29-158 26-162 24-168Z"/>
+            </g>
+            <path class="w-wave" d="M62-228Q76-218 74-200"/><path class="w-wave w2" d="M62-228Q76-218 74-200"/><path class="w-wave w3" d="M62-228Q76-218 74-200"/>
+          </g>
+          <path id="q-near" fill="url(#q-g-near)"/>
+        </svg>
+        <div class="q-land-fade"></div>
+      </div>
+      <div class="q-wrap">
+        <header class="q-head">
+          <h1 id="q-title">Qamar <span lang="ar" dir="rtl">قمر</span></h1>
+          <p>Écrivez directement aux développeurs du site.</p>
+          <p class="q-demo" id="q-demo" hidden>Mode démo : les demandes restent dans ce navigateur.</p>
+        </header>
+        <div class="q-grid">
+          <form class="q-card" id="q-form" novalidate aria-labelledby="q-new-t">
+            <h2 id="q-new-t">Nouvelle demande</h2>
+            <fieldset class="q-f"><legend>Type</legend>
+              <div class="q-seg">
+                <label><input type="radio" name="kind" value="demande" checked><span>Demande</span></label>
+                <label><input type="radio" name="kind" value="amelioration"><span>Amélioration</span></label>
+                <label><input type="radio" name="kind" value="probleme"><span>Problème</span></label>
+              </div>
+            </fieldset>
+            <div class="q-two">
+              <fieldset class="q-f"><legend>Priorité</legend>
+                <div class="q-seg">
+                  <label><input type="radio" name="priority" value="basse"><span>Basse</span></label>
+                  <label><input type="radio" name="priority" value="normale" checked><span>Normale</span></label>
+                  <label><input type="radio" name="priority" value="haute"><span>Haute</span></label>
+                </div>
+              </fieldset>
+              <label class="q-f"><span>Page concernée</span>
+                <select name="page">
+                  <option>Tout le site</option><option>Accueil</option><option>Boutique</option><option>Rendez-vous</option><option>Espace gérant</option><option>Mentions légales</option><option>Vos données</option><option>Conditions d'utilisation</option>
+                </select>
+              </label>
+            </div>
+            <label class="q-f"><span>Description</span><textarea name="description" maxlength="4000" required placeholder="Ce que vous voulez, ou ce qui ne marche pas"></textarea></label>
+            <div class="q-f"><span>Fichier d'exemple (facultatif)</span>
+              <label class="q-drop" id="q-drop">Ajouter une image ou un PDF<input id="q-file" type="file" accept="image/*,application/pdf"></label>
+              <div class="q-file-view" id="q-file-view" hidden><img alt=""><span data-name></span><button class="d-link" type="button" id="q-file-rm">Retirer</button></div>
+            </div>
+            <p class="q-err" id="q-err" role="alert" hidden></p>
+            <div class="q-actions"><button class="d-btn q-send" id="q-send" type="submit">Envoyer la demande</button><p class="q-ok" id="q-ok" role="status" hidden></p></div>
+          </form>
+          <section class="q-card" aria-labelledby="q-track-t">
+            <header class="q-card-h"><h2 id="q-track-t">Suivi des demandes</h2><p id="q-count"></p></header>
+            <ul class="q-list" id="q-list"></ul>
+          </section>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script src="booking-config.js?v=20261109a"></script>
-  <script src="booking-api.js?v=20261109a"></script>
-  <script type="module" src="js/dash.js?v=6"></script>
+  <script src="booking-api.js?v=20261109b"></script>
+  <script type="module" src="js/dash.js?v=7"></script>
 </body>
 </html>
