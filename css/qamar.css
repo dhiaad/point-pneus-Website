@@ -108,12 +108,15 @@ html:has(body.q-night) { background: #07060f; color-scheme: dark; }
 
 @media (max-width: 860px) {
   .q-moon-box { left: 76%; top: 114px; width: 148px; }
+  .q-night .d-tabs { position: relative; z-index: 3; }
   .q-wrap { padding-inline: 16px; }
   .q-head { min-height: 170px; align-content: start; padding-top: 16px; }
   .q-head p { max-width: 20ch; }
   .q-grid { grid-template-columns: minmax(0, 1fr); }
   .q-list { max-height: none; overflow: visible; margin-right: 0; padding-right: 0; }
 }
+@media (max-width: 600px) { .q-moon-box { top: 154px; } }
+@media (max-width: 360px) { .q-moon-box { top: 200px; left: 81%; width: 104px; } }
 @media (max-width: 460px) { .q-two { grid-template-columns: minmax(0, 1fr); } .q-seg span { font-size: 13px; } }
 
 @media (prefers-reduced-motion: reduce) {

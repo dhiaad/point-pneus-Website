@@ -1,5 +1,5 @@
 // Catalogue de la boutique pneus.
-// Catalogue de départ : le gérant le modifie ensuite depuis l'espace gérant, onglet Boutique.
+// Catalogue de départ : le gérant le modifie ensuite depuis l'espace gérant, onglet Nos pneus.
 // Prix indicatifs TTC par pneu, dans la taille de référence indiquée,
 // montage, équilibrage et valves inclus. Le prix exact est confirmé au client avant la pose.
 

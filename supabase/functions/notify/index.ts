@@ -122,7 +122,7 @@ async function statusChanged(b: Row, before: Row) {
 
 async function newQuote(q: Row) {
   const labels: Record<string, string> = { besoin: "Besoin", taille: "Taille", indices: "Indices", saison: "Saison", quantite: "Quantité", gamme: "Gamme", type: "Type de pneu", vehicule: "Véhicule", immatriculation: "Immatriculation" };
-  const rows = Object.entries(q.details ?? {}).filter(([, v]) => v)
+  const rows = Object.entries(q.details ?? {}).filter(([, v]) => v && typeof v !== "object")
     .map(([k, v]) => `<li><b>${esc(labels[k] ?? k)} :</b> ${esc(v)}</li>`).join("");
   await sendEmail(env("GARAGE_EMAIL"), `Devis ${q.kind === "mecanique" ? "mécanique" : "pneus"} · ${q.customer_name}`, layout("Nouvelle demande de devis", `
     <p>${esc(q.customer_name)} · <a href="tel:${esc(q.customer_phone)}">${esc(q.customer_phone)}</a></p>
