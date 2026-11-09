@@ -29,23 +29,54 @@ let events = [];        // fréquentation du site, déjà agrégée (jour, type,
 let period = 30;        // jours affichés dans « Activité du site »
 let selected = null;    // jour affiché
 let offset = 0;         // premier jour de la bande, en jours depuis aujourd'hui
-const OFFSET_MIN = -7, OFFSET_MAX = 21;
+const OFFSET_MIN = -91, OFFSET_MAX = 28;
 
 /* ---------------- Connexion ---------------- */
 $("demo-banner").hidden = !isDemo;
-const VIEWS = { tableau: "dashboard", boutique: "view-boutique", qamar: "view-qamar" };
+const VIEWS = { tableau: "dashboard", "nos-pneus": "view-boutique", stock: "view-stock", commandes: "view-commandes", qamar: "view-qamar" };
+const ALIAS = { boutique: "nos-pneus" };
 let signedIn = false, shownView = null;
+
+/* ---------------- Les phares : allumés, l'espace gérant passe aux couleurs du site ---------------- */
+const THEME_KEY = "pp-dash-theme";
+const isDark = () => document.documentElement.dataset.dashTheme === "dark";
+function paintBar() {
+  document.querySelector('meta[name="theme-color"]').content = document.body.classList.contains("q-night") ? "#07060f" : isDark() ? "#0a090c" : "#f5f3ee";
+}
+function paintPhare() {
+  const on = isDark(), b = $("phare");
+  b.setAttribute("aria-checked", String(on));
+  b.title = on ? "Éteindre les phares : passer en mode clair" : "Allumer les phares : passer en mode sombre";
+  paintBar();
+}
+$("phare").addEventListener("click", (e) => {
+  const on = !isDark();
+  if (on) document.documentElement.dataset.dashTheme = "dark"; else delete document.documentElement.dataset.dashTheme;
+  try { localStorage.setItem(THEME_KEY, on ? "dark" : "light"); } catch (x) { /* le choix vaudra pour cette page */ }
+  paintPhare();
+  if (on && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const r = e.currentTarget.getBoundingClientRect(), s = $("phare-sweep");
+    s.style.setProperty("--x", `${Math.round(r.left + 12)}px`);
+    s.style.setProperty("--y", `${Math.round(r.top + r.height / 2)}px`);
+    s.classList.remove("go"); void s.offsetWidth; s.classList.add("go");
+  }
+});
+paintPhare();
+
 function route() {
   if (!signedIn) return;
-  const v = VIEWS[location.hash.slice(1)] ? location.hash.slice(1) : "tableau";
+  const h = location.hash.slice(1), wanted = ALIAS[h] || h, v = VIEWS[wanted] ? wanted : "tableau", prev = shownView;
   for (const [k, id] of Object.entries(VIEWS)) $(id).hidden = k !== v;
   document.querySelectorAll("[data-view]").forEach((a) => { if (a.dataset.view === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   document.body.classList.toggle("q-night", v === "qamar");
-  document.querySelector('meta[name="theme-color"]').content = v === "qamar" ? "#07060f" : "#f5f3ee";
+  paintBar();
   if (shownView !== v) scrollTo(0, 0);
   shownView = v;
   if (v === "tableau" && chartData.length) drawChart(chartData);
-  if (v === "boutique") import("./admin-shop.js?v=1").then((m) => m.openShopAdmin());
+  if (v === "tableau" && prev && prev !== "tableau") load();
+  if (v === "nos-pneus") import("./admin-shop.js?v=2").then((m) => m.openShopAdmin());
+  if (v === "stock") import("./admin-stock.js?v=1").then((m) => m.openStock());
+  if (v === "commandes") import("./admin-stock.js?v=1").then((m) => m.openOrders());
   if (v === "qamar") import("./qamar.js?v=4").then((m) => m.openQamar());
 }
 addEventListener("hashchange", route);
@@ -63,6 +94,7 @@ async function start() {
   $("admin-email").textContent = user.email || "";
   if (!(await api.isAdmin())) { $("denied").hidden = false; return; }
   signedIn = true;
+  await autoSeed();
   $("d-tabs").hidden = false;
   route();
   $("demo-tools").hidden = !isDemo;
@@ -94,6 +126,7 @@ async function load() {
   events = ev || [];
   if (!selected) selected = keyOf(new Date());
   render();
+  import("./admin-stock.js?v=1").then((m) => m.badges()).catch(() => null);
   if (!bookings) $("day-list").innerHTML = '<p class="empty">Chargement impossible. Vérifiez la connexion.</p>';
 }
 function render() { renderHello(); renderKpis(); renderDays(); renderDay(); renderTodo(); renderBlocks(); renderStats(); }
@@ -336,7 +369,7 @@ function renderTodo() {
       <p class="todo-n">${esc(name)}${d.total ? ` · ${esc(d.total)}` : ""}</p>
       ${main ? `<p class="todo-d">${esc(main)}</p>` : ""}
       ${rest ? `<p class="todo-d">${esc(rest)}</p>` : ""}
-      <div class="todo-a"><a class="rdv-tel" href="tel:${esc(telOf(phone))}">${esc(phone)}</a><button class="d-btn d-btn-line" type="button" data-quote="${esc(q.id)}">Rappelé</button></div>
+      <div class="todo-a"><a class="rdv-tel" href="tel:${esc(telOf(phone))}">${esc(phone)}</a>${isShop(q) ? '<a class="d-btn d-btn-line" href="#commandes">Voir la commande</a>' : `<button class="d-btn d-btn-line" type="button" data-quote="${esc(q.id)}">Rappelé</button>`}</div>
     </div>`;
   });
   $("todo").innerHTML = [...a, ...q].join("");
@@ -432,108 +465,31 @@ $("dashboard").addEventListener("click", async (e) => {
 });
 
 /* ---------------- Démo : données d'exemple ---------------- */
+const SEED_FLAG = "pp-demo-seeded", SEED_VERSION = "agenda-1";
+async function fillDemo() {
+  const m = await import("./demo-seed.js?v=1");
+  m.seedDemo();
+  try { localStorage.setItem(SEED_FLAG, SEED_VERSION); } catch (x) { /* rien */ }
+}
+// La démo arrive déjà remplie, une seule fois : après « Vider », elle reste vide.
+async function autoSeed() {
+  if (!isDemo) return;
+  let flag = null;
+  try { flag = localStorage.getItem(SEED_FLAG); } catch (x) { return; }
+  if (flag === SEED_VERSION || flag === "vide") return;
+  await fillDemo().catch(() => null);
+}
 if (isDemo) {
-  $("demo-fill").addEventListener("click", () => { seedDemo(); load(); });
+  $("demo-fill").addEventListener("click", async () => { await fillDemo(); load(); });
   $("demo-clear").addEventListener("click", (e) => {
     const b = e.currentTarget;
     if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Tout effacer ?"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "Vider"; }, 4000); return; }
-    for (const k of ["pp-demo-bookings", "pp-demo-quotes", "pp-demo-blocks", "pp-demo-events", "pp-demo-qamar"]) { try { localStorage.removeItem(k); } catch (x) { /* rien */ } }
+    for (const k of ["pp-demo-bookings", "pp-demo-quotes", "pp-demo-blocks", "pp-demo-events", "pp-demo-qamar", "pp-demo-stock"]) { try { localStorage.removeItem(k); } catch (x) { /* rien */ } }
+    try { localStorage.setItem(SEED_FLAG, "vide"); } catch (x) { /* rien */ }
     b.dataset.sure = ""; b.textContent = "Vider";
     load();
   });
 }
-function seedDemo() {
-  let seed = 7;
-  const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-  const pick = (a) => a[Math.floor(rnd() * a.length)];
-  const NAMES = ["Démo · Martin", "Démo · Garcia", "Démo · Roux", "Démo · Lopez", "Démo · Bernard", "Démo · Puig", "Démo · Ferrer", "Démo · Moreau", "Démo · Vidal", "Démo · Sanchez"];
-  const CARS = [
-    { brand: "Renault", model: "Clio V", year: 2021, tire: "195/55 R16" }, { brand: "Peugeot", model: "208", year: 2020, tire: "195/55 R16" },
-    { brand: "Citroën", model: "C3", year: 2019, tire: "205/50 R17" }, { brand: "Dacia", model: "Sandero", year: 2022, tire: "185/65 R15" },
-    { brand: "Volkswagen", model: "Golf VII", year: 2016, tire: "205/55 R16" }, { brand: "Toyota", model: "Yaris", year: 2021, tire: "185/65 R15" },
-    { brand: "BMW", model: "Série 1", year: 2018, tire: "225/45 R17" }, { brand: "Renault", model: "Trafic", year: 2017, tire: "215/65 R16" },
-  ];
-  const JOBS = [
-    { id: "pneus", w: 5, make: (car) => { const qty = pick([2, 4, 4]); return { svc: { id: "pneus", qty, season: pick(["Été", "4 saisons", "Hiver"]), size: car.tire, label: `Changer des pneus · ${qty} pneus · ${car.tire}`, price: "Pneus sur devis" }, min: qty === 4 ? 45 : 30, eur: qty * 95 }; } },
-    { id: "crevaison", w: 2, make: () => ({ svc: { id: "crevaison", label: "Réparer une crevaison", price: "15 €" }, min: 30, eur: 15 }) },
-    { id: "geometrie", w: 2, make: () => ({ svc: { id: "geometrie", option: "avant", label: "Géométrie 3D · Parallélisme avant", price: "65 €" }, min: 60, eur: 65 }) },
-    { id: "clim", w: 1, make: () => ({ svc: { id: "clim", option: "r1234yf", label: "Recharge de climatisation · Gaz R1234yf", price: "110 €" }, min: 60, eur: 110 }) },
-    { id: "vidange", w: 2, make: () => ({ svc: { id: "vidange", label: "Vidange et entretien", price: "Sur devis" }, min: 60, eur: 0 }) },
-    { id: "freins", w: 1, make: () => ({ svc: { id: "freins", label: "Freins", price: "Sur devis" }, min: 90, eur: 0 }) },
-  ];
-  const bag = JOBS.flatMap((j) => Array(j.w).fill(j));
-  const now = new Date(), today = startOfDay(now), out = [];
-  for (let k = -80; k <= 12; k++) {
-    const day = addDays(today, k);
-    if (isClosed(day)) continue;
-    const p = T.parisParts(day), dow = p.dow;
-    const n = 2 + Math.floor(rnd() * 4) + (k === 0 ? 2 : 0);
-    const used = [[], []];
-    for (let i = 0; i < n; i++) {
-      const job = pick(bag), car = pick(CARS), made = job.make(car);
-      const slots = openSlots(dow);
-      const [a, z] = pick(slots);
-      const startM = a + Math.floor(rnd() * ((z - a - made.min) / 30 + 1)) * 30;
-      const lane = used.findIndex((l) => l.every(([s, e]) => startM >= e || startM + made.min <= s));
-      if (lane < 0) continue;
-      used[lane].push([startM, startM + made.min]);
-      const start = T.parisDate(p.y, p.m, p.d, Math.floor(startM / 60), startM % 60);
-      const end = new Date(start.getTime() + made.min * 6e4);
-      let status = "confirme";
-      if (end < now) status = rnd() < 0.08 ? "annule" : "termine";
-      else if (k > 0 && rnd() < 0.35) status = "en_attente";
-      else if (k === 0 && rnd() < 0.25) status = "en_attente";
-      const letters = "ABCDEFGHJKLMNPRSTVWXYZ";
-      const plate = `${pick([...letters])}${pick([...letters])}-${100 + Math.floor(rnd() * 899)}-${pick([...letters])}${pick([...letters])}`;
-      out.push({
-        id: `SEED-${k + 90}-${i}`, start_at: start.toISOString(), end_at: end.toISOString(), minutes: made.min,
-        services: [made.svc], vehicle: { brand: car.brand, model: car.model, year: car.year, demo: true }, plate,
-        customer_name: pick(NAMES), customer_phone: `06 00 00 ${T.pad(10 + i)} ${T.pad(20 + ((k + 90) % 70))}`, customer_email: null,
-        note: rnd() < 0.15 ? "Voiture qui tire à droite depuis une semaine." : null,
-        estimated_total: made.eur || null, quote_needed: !made.eur, status, created_at: new Date(start.getTime() - 3 * DAY).toISOString(),
-      });
-    }
-  }
-  const quotes = [
-    { kind: "pneus", details: { type: "Commande boutique", articles: "4 × Michelin CrossClimate 2 (205/55 R16 94V)", pose: "Pose au garage avec rendez-vous", total: "504 € (indicatif)", message: "Plaque AB-482-KD" }, name: "Démo · Sanchez", customer_name: "Démo · Sanchez", customer_phone: "06 00 00 11 22", status: "nouveau", created_at: new Date(now - 42 * 6e4).toISOString(), id: "SEEDQ1" },
-    { kind: "pneus", details: { type: "Commande boutique", articles: "2 × Nankang NS-2R (225/45 R17 94W) ; 1 × Lot drift (225/45 R17)", pose: "Retrait au comptoir", total: "316 € (indicatif)" }, name: "Démo · Ferrer", customer_name: "Démo · Ferrer", customer_phone: "06 00 00 33 44", status: "nouveau", created_at: new Date(now - 5 * 36e5).toISOString(), id: "SEEDQ2" },
-    { kind: "mecanique", details: { besoin: "Bruit au freinage à l'avant", vehicule: "Peugeot 3008 2019" }, name: "Démo · Moreau", customer_name: "Démo · Moreau", customer_phone: "06 00 00 55 66", status: "nouveau", created_at: new Date(now - 26 * 36e5).toISOString(), id: "SEEDQ3" },
-    { kind: "pneus", details: { type: "Commande boutique", articles: "4 × Hankook Ventus Prime 4 (205/55 R16 91V)", pose: "Pose au garage avec rendez-vous", total: "312 € (indicatif)" }, name: "Démo · Vidal", customer_name: "Démo · Vidal", customer_phone: "06 00 00 77 88", status: "traite", created_at: new Date(now - 3 * DAY).toISOString(), id: "SEEDQ4" },
-  ];
-  const lunchDay = addDays(today, [1, 2, 3, 4, 5, 6, 7].find((n) => !isClosed(addDays(today, n))) || 1);
-  const lp = T.parisParts(lunchDay);
-  const blocks = [{ id: "SEEDB1", start_at: T.parisDate(lp.y, lp.m, lp.d, 16, 0).toISOString(), end_at: T.parisDate(lp.y, lp.m, lp.d, 18, 30).toISOString(), reason: "Formation pneus run-flat" }];
-  const merge = (k, rows) => {
-    let cur = []; try { cur = JSON.parse(localStorage.getItem(k) || "[]").filter((r) => !String(r.id).startsWith("SEED")); } catch (x) { /* rien */ }
-    try { localStorage.setItem(k, JSON.stringify(cur.concat(rows))); } catch (x) { /* rien */ }
-  };
-  merge("pp-demo-bookings", out); merge("pp-demo-quotes", quotes); merge("pp-demo-blocks", blocks);
-  merge("pp-demo-qamar", [
-    { id: "SEEDM1", kind: "probleme", priority: "haute", page: "Boutique", description: "Exemple de démo : le prix d'un pneu ne se met pas à jour sur téléphone.", attachment: null, status: "en_cours", created_at: new Date(now - 2 * DAY).toISOString() },
-    { id: "SEEDM2", kind: "amelioration", priority: "normale", page: "Accueil", description: "Exemple de démo : ajouter les horaires d'été dans le bas de page.", attachment: null, status: "recue", created_at: new Date(now - 5 * 36e5).toISOString() },
-    { id: "SEEDM3", kind: "demande", priority: "basse", page: "Rendez-vous", description: "Exemple de démo : changer l'ordre des prestations proposées.", attachment: null, status: "terminee", created_at: new Date(now - 9 * DAY).toISOString() },
-  ]);
-
-  // Fréquentation d'exemple, seulement en mode démo : le gérant voit à quoi ressemblera son tableau de bord.
-  {
-    const SRC = [["Google", 52], ["Accès direct", 26], ["Réseaux sociaux", 10], ["Annuaires et GPS", 8], ["Autre moteur", 4]];
-    const DEV = [["mobile", 68], ["ordinateur", 26], ["tablette", 6]];
-    const rows = [];
-    for (let k = 100; k >= 0; k--) {
-      const day = addDays(today, -k), d = keyOf(day), wk = T.parisParts(day).dow;
-      const volume = (wk >= 6 ? 20 : 46) * (1 + (100 - k) * 0.004) * (0.8 + rnd() * 0.4);
-      for (const [s, ws] of SRC) for (const [dv, wd] of DEV) {
-        const n = Math.round((volume * ws * wd) / 10000 + rnd() * 0.6);
-        if (n) rows.push({ d, kind: "visite", path: "/", source: s, device: dv, n });
-      }
-      for (const [p, f] of [["/", 1.1], ["/pneus.html", 0.7], ["/reserver.html", 0.35], ["/confidentialite.html", 0.02]]) rows.push({ d, kind: "page", path: p, source: null, device: "mobile", n: Math.round(volume * f) });
-      for (const [kind, f] of [["rdv", 0.22], ["plaque", 0.14], ["panier", 0.06], ["appel", 0.1], ["itineraire", 0.07]]) { const n = Math.round(volume * f * (0.7 + rnd() * 0.6)); if (n) rows.push({ d, kind, path: "/", source: null, device: "mobile", n }); }
-    }
-    let mine = []; try { mine = (JSON.parse(localStorage.getItem("pp-demo-events") || "[]")).filter((r) => !r.seed); } catch (x) { /* rien */ }
-    try { localStorage.setItem("pp-demo-events", JSON.stringify(mine.concat(rows.map((r) => ({ ...r, seed: 1 }))))); } catch (x) { /* rien */ }
-  }
-}
-
 start();
 // Le tableau se remet à jour tout seul (heure, prochain rendez-vous)
 setInterval(() => { if (!$("dashboard").hidden && !$("dashboard").querySelector(".sure")) { renderHello(); renderDay(); } }, 60e3);

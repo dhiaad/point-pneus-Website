@@ -443,6 +443,8 @@ document.addEventListener("submit", async (e) => {
     articles: cart.map((it) => { const p = byId.get(it.id); return `${it.qty} × ${p.brand} ${p.model} (${it.size})`; }).join(" ; "),
     pose: mode === "pose" ? "Pose au garage avec rendez-vous" : "Retrait au comptoir",
     total: `${total} € (indicatif, tarif posé)`,
+    // La même chose, lisible par l'onglet Stock : c'est ce qui réserve les pneus.
+    lignes: cart.map((it) => { const p = byId.get(it.id); return { id: it.id, qty: it.qty, size: it.size, label: `${p.brand} ${p.model}`, price: p.price }; }),
   };
   if (note) details.message = note;
   if (foundCar) { details.vehicule = [foundCar.brand, foundCar.model, foundCar.year].filter(Boolean).join(" "); details.immatriculation = foundCar.plate; }

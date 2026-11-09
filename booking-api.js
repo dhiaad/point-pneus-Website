@@ -219,6 +219,37 @@
     async adminDeleteBlock(id) {
       store("local", "pp-demo-blocks", (store("local", "pp-demo-blocks") || []).filter((b) => b.id !== id));
     },
+    async adminStock() { return store("local", "pp-demo-stock") || {}; },
+    async adminSetStock(id, value) {
+      const all = store("local", "pp-demo-stock") || {};
+      all[id] = value;
+      demoWrite("pp-demo-stock", all);
+    },
+    async adminOrders() {
+      return (store("local", "pp-demo-quotes") || []).filter((q) => q.details && q.details.type === "Commande boutique")
+        .sort((a, b) => b.created_at.localeCompare(a.created_at));
+    },
+    // Les pneus sortent du stock à la remise au client, et y reviennent si la remise est annulée.
+    async adminSetOrderStatus(id, status) {
+      const list = store("local", "pp-demo-quotes") || [];
+      const stock = store("local", "pp-demo-stock") || {};
+      const row = list.find((q) => q.id === id);
+      if (!row) throw new BookingError("network");
+      const before = row.order_status || (row.status === "traite" ? "confirmee" : "nouvelle");
+      const lines = (row.details && row.details.lignes) || [];
+      const tracked = (l) => stock[l.id] && typeof stock[l.id].qty === "number";
+      if (status === "livree" && before !== "livree") {
+        const short = lines.find((l) => tracked(l) && stock[l.id].qty < lines.reduce((n, x) => (x.id === l.id ? n + x.qty : n), 0));
+        if (short) throw new BookingError("stock_short", short.label);
+        lines.filter(tracked).forEach((l) => { stock[l.id].qty -= l.qty; });
+      } else if (before === "livree" && status !== "livree") {
+        lines.filter(tracked).forEach((l) => { stock[l.id].qty += l.qty; });
+      }
+      row.order_status = status;
+      row.status = status === "nouvelle" ? "nouveau" : "traite";
+      demoWrite("pp-demo-stock", stock);
+      demoWrite("pp-demo-quotes", list);
+    },
     async products() { return store("local", "pp-demo-products"); },
     async adminSaveProducts(list) { await wait(120); demoWrite("pp-demo-products", list); },
     async qamarList() { return (store("local", "pp-demo-qamar") || []).slice().sort((a, b) => b.created_at.localeCompare(a.created_at)); },
@@ -364,6 +395,31 @@
         const sb = await client();
         const { error } = await sb.from("blocked_slots").delete().eq("id", id);
         check(error, "network");
+      },
+      async adminStock() {
+        const sb = await client();
+        const { data, error } = await sb.from("stock").select("product_id,qty,min_qty");
+        check(error, "network");
+        return Object.fromEntries(data.map((r) => [r.product_id, { qty: r.qty, min: r.min_qty }]));
+      },
+      async adminSetStock(id, value) {
+        const sb = await client();
+        const { error } = await sb.from("stock").upsert({ product_id: id, qty: value.qty, min_qty: value.min, updated_at: new Date().toISOString() });
+        check(error, "network");
+      },
+      async adminOrders() {
+        const sb = await client();
+        const { data, error } = await sb.from("quote_requests").select("*").eq("details->>type", "Commande boutique").order("created_at", { ascending: false }).limit(500);
+        check(error, "network");
+        return data;
+      },
+      async adminSetOrderStatus(id, status) {
+        const sb = await client();
+        const { error } = await sb.rpc("admin_set_order_status", { p_id: id, p_status: status });
+        if (error) {
+          const m = (error.message || "").match(/stock_insuffisant:(.*)/);
+          throw m ? new BookingError("stock_short", m[1]) : new BookingError("network", error.message);
+        }
       },
       async products() {
         const sb = await client();

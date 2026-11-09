@@ -9,9 +9,10 @@
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" href="assets/logo/icone.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+  <script>try{if(localStorage.getItem("pp-dash-theme")==="dark")document.documentElement.dataset.dashTheme="dark"}catch(e){}</script>
   <link rel="stylesheet" href="css/kit.css?v=10">
-  <link rel="stylesheet" href="css/dash.css?v=8">
-  <link rel="stylesheet" href="css/qamar.css?v=4">
+  <link rel="stylesheet" href="css/dash.css?v=10">
+  <link rel="stylesheet" href="css/qamar.css?v=6">
 </head>
 <body class="dash">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -24,7 +25,9 @@
     </a>
     <nav class="d-tabs" id="d-tabs" hidden aria-label="Rubriques de l'espace gérant">
       <a href="#tableau" data-view="tableau">Tableau de bord</a>
-      <a href="#boutique" data-view="boutique">Boutique</a>
+      <a href="#nos-pneus" data-view="nos-pneus">Nos pneus</a>
+      <a href="#stock" data-view="stock">Stock<span class="d-badge" id="tab-stock-n" hidden></span></a>
+      <a href="#commandes" data-view="commandes">Commandes<span class="d-badge" id="tab-commandes-n" hidden></span></a>
       <a href="#qamar" data-view="qamar"><i class="d-moon" aria-hidden="true"></i>Qamar</a>
     </nav>
     <div class="d-top-right">
@@ -32,7 +35,17 @@
         <span class="d-email" id="admin-email"></span>
         <button class="d-link" type="button" id="admin-signout">Se déconnecter</button>
       </div>
-      <a class="d-link" href="index.html">Voir le site</a>
+      <a class="d-link d-site" href="index.html">Voir le site</a>
+      <button class="phare" type="button" id="phare" role="switch" aria-checked="false" aria-label="Mode sombre" title="Allumer les phares : passer en mode sombre">
+        <svg viewBox="0 0 64 36" aria-hidden="true">
+          <defs><linearGradient id="ph-g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe9a8" stop-opacity="0"/><stop offset="1" stop-color="#ffe9a8" stop-opacity=".62"/></linearGradient></defs>
+          <path class="ph-cone" d="M40 10 2 3v30l38-8z" fill="url(#ph-g)"/>
+          <g class="ph-rays"><path d="M35 9.5 19 7"/><path d="M34 15.5 15 14"/><path d="M34 21.5 15 22"/><path d="M35 27 19 30"/></g>
+          <path class="ph-lamp" d="M42 5.500c-2.200 3.500-3.200 7.600-3.200 12.500s1 9 3.200 12.500h4.500C55.600 30.500 61 25.400 61 18S55.600 5.500 46.500 5.500z"/>
+          <circle class="ph-ring" cx="49" cy="18" r="7"/>
+          <circle class="ph-bulb" cx="49" cy="18" r="3.400"/>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -143,17 +156,17 @@
         </div>
       </section>
     </div>
-    <!-- Boutique : les produits, leurs prix, leur présence en vitrine -->
+    <!-- Nos pneus : les produits, leurs prix, leur présence en vitrine -->
     <div class="pa" id="view-boutique" hidden>
       <div class="hello">
         <div>
-          <h1>Boutique</h1>
+          <h1>Nos pneus</h1>
           <p class="hello-sum" id="pa-sum"></p>
         </div>
         <div class="pa-top"><a class="d-link" href="pneus.html" target="_blank" rel="noopener">Voir la boutique</a><button class="d-btn" type="button" id="pa-add">Ajouter un produit</button></div>
       </div>
       <p class="gate-demo pa-demo" id="pa-demo" hidden>Mode démo : vos changements s'appliquent à la boutique, mais seulement dans ce navigateur.</p>
-      <section class="card" aria-label="Produits de la boutique">
+      <section class="card" aria-label="Nos pneus">
         <div class="pa-tools">
           <label class="field pa-search"><span class="sr-only">Rechercher un produit</span><input id="pa-q" type="search" placeholder="Marque, modèle ou dimension"></label>
           <label class="field pa-filter"><span class="sr-only">Catégorie</span><select id="pa-cat"></select></label>
@@ -183,9 +196,49 @@
             <label class="pa-check full"><input name="shown" type="checkbox" checked><span>Afficher en vitrine</span></label>
           </div>
           <p class="form-err" id="pa-form-err" role="alert" hidden></p>
-          <footer class="pa-dlg-f"><button class="d-btn d-btn-text" type="button" data-pa-close>Annuler</button><button class="d-btn" type="submit" id="pa-save">Ajouter à la boutique</button></footer>
+          <footer class="pa-dlg-f"><button class="d-btn d-btn-text" type="button" data-pa-close>Annuler</button><button class="d-btn" type="submit" id="pa-save">Ajouter ce produit</button></footer>
         </form>
       </dialog>
+    </div>
+
+    <!-- Stock : combien il en reste, et ce que les commandes ont déjà réservé -->
+    <div class="pa" id="view-stock" hidden>
+      <div class="hello">
+        <div>
+          <h1>Stock</h1>
+          <p class="hello-sum" id="sk-sum"></p>
+        </div>
+      </div>
+      <p class="gate-demo pa-demo" id="sk-demo" hidden>Quantités fictives pour la démonstration, enregistrées dans ce navigateur. Le site public n'affiche aucune disponibilité.</p>
+      <section class="card" aria-label="Stock par produit">
+        <div class="pa-tools">
+          <label class="field pa-search"><span class="sr-only">Rechercher un produit</span><input id="sk-q" type="search" placeholder="Marque, modèle ou dimension"></label>
+          <div class="seg" role="group" aria-label="Afficher" id="sk-seg"></div>
+          <p class="pa-status" id="sk-status" role="status"></p>
+        </div>
+        <div class="sk-head" aria-hidden="true"><span></span><span>Produit</span><span>En stock</span><span>Réservés</span><span>Disponibles</span><span>Alerte à</span><span>État</span></div>
+        <div id="sk-list"></div>
+      </section>
+    </div>
+
+    <!-- Commandes : du rappel du client à la remise des pneus -->
+    <div class="pa" id="view-commandes" hidden>
+      <div class="hello">
+        <div>
+          <h1>Commandes</h1>
+          <p class="hello-sum" id="od-sum"></p>
+        </div>
+      </div>
+      <p class="gate-demo pa-demo" id="od-demo" hidden>Commandes fictives pour la démonstration, enregistrées dans ce navigateur.</p>
+      <section class="card" aria-label="Commandes de pneus">
+        <div class="pa-tools">
+          <label class="field pa-search"><span class="sr-only">Rechercher une commande</span><input id="od-q" type="search" placeholder="Client, téléphone ou pneu"></label>
+          <div class="seg" role="group" aria-label="Afficher" id="od-seg"></div>
+          <p class="od-filter" id="od-filter" hidden></p>
+        </div>
+        <div id="od-list"></div>
+        <p class="od-more" id="od-more" hidden><button class="d-btn d-btn-line" type="button" id="od-more-b">Afficher plus</button></p>
+      </section>
     </div>
 
     <!-- Qamar : écrire aux développeurs du site -->
@@ -269,8 +322,10 @@
     </section>
   </main>
 
+  <div class="phare-sweep" id="phare-sweep" aria-hidden="true"></div>
+
   <script src="booking-config.js?v=20261109a"></script>
-  <script src="booking-api.js?v=20261109b"></script>
-  <script type="module" src="js/dash.js?v=8"></script>
+  <script src="booking-api.js?v=20261109c"></script>
+  <script type="module" src="js/dash.js?v=9"></script>
 </body>
 </html>

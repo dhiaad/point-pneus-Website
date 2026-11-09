@@ -88,7 +88,7 @@ function openForm(p) {
   f.reset();
   $("pa-form-t").textContent = p ? "Modifier le produit" : "Ajouter un produit";
   $("pa-form-err").hidden = true;
-  $("pa-save").textContent = p ? "Enregistrer" : "Ajouter à la boutique";
+  $("pa-save").textContent = p ? "Enregistrer" : "Ajouter ce produit";
   f.elements.brand.value = p?.brand || "";
   f.elements.model.value = p?.model || "";
   f.elements.cat.value = p?.cat || CATEGORIES[0].id;
@@ -131,7 +131,7 @@ async function submitForm(ev) {
   if (removing) delete product.image;
   const next = editing ? items.map((p) => (p.id === editing.id ? product : p)) : [product, ...items];
   $("pa-save").disabled = true;
-  const ok = await persist(next, editing ? `${brand} ${model} enregistré.` : `${brand} ${model} ajouté à la boutique.`);
+  const ok = await persist(next, editing ? `${brand} ${model} enregistré.` : `${brand} ${model} ajouté.`);
   $("pa-save").disabled = false;
   if (ok) $("pa-dlg").close();
 }

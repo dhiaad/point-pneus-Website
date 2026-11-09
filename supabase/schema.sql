@@ -222,7 +222,7 @@ begin
   if p_kind not in ('pneus', 'mecanique') then raise exception 'type_invalide'; end if;
   if length(trim(coalesce(p_name, ''))) not between 2 and 100 then raise exception 'nom_invalide'; end if;
   if length(v_digits) not between 10 and 15 then raise exception 'telephone_invalide'; end if;
-  if jsonb_typeof(p_details) <> 'object' or length(p_details::text) > 3000 then raise exception 'details_invalides'; end if;
+  if jsonb_typeof(p_details) <> 'object' or length(p_details::text) > 6000 then raise exception 'details_invalides'; end if;
   -- Anti-spam : pas plus de 20 demandes en 10 minutes, tous numéros confondus.
   if (select count(*) from public.quote_requests where created_at > now() - interval '10 minutes') >= 20 then
     raise exception 'trop_de_demandes';
@@ -303,6 +303,66 @@ create policy "tout le monde voit la boutique" on public.products for select usi
 drop policy if exists "garage gère la boutique" on public.products;
 create policy "garage gère la boutique" on public.products
   for all using (public.is_admin()) with check (public.is_admin());
+
+-- ---------- Stock et commandes ----------
+-- Une commande de la boutique reste une ligne de quote_requests (details.type = 'Commande boutique', details.lignes = les pneus).
+alter table public.quote_requests add column if not exists order_status text not null default 'nouvelle';
+alter table public.quote_requests drop constraint if exists quote_requests_order_status_check;
+alter table public.quote_requests add constraint quote_requests_order_status_check
+  check (order_status in ('nouvelle', 'confirmee', 'prete', 'livree', 'annulee'));
+
+-- Réservé au garage : le site public n'affiche aucune disponibilité. qty vide = produit dont le stock n'est pas suivi.
+create table if not exists public.stock (
+  product_id text primary key,
+  qty int check (qty is null or qty >= 0),
+  min_qty int not null default 4 check (min_qty >= 0),
+  updated_at timestamptz not null default now()
+);
+alter table public.stock enable row level security;
+drop policy if exists "garage gère le stock" on public.stock;
+create policy "garage gère le stock" on public.stock
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- Les pneus sortent du stock à la remise au client et y reviennent si la remise est annulée.
+create or replace function public.admin_set_order_status(p_id uuid, p_status text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_old text;
+  v_lines jsonb;
+  r record;
+begin
+  if not public.is_admin() then raise exception 'acces_refuse'; end if;
+  if p_status not in ('nouvelle', 'confirmee', 'prete', 'livree', 'annulee') then raise exception 'statut_invalide'; end if;
+  select order_status, coalesce(details->'lignes', '[]'::jsonb) into v_old, v_lines
+    from public.quote_requests where id = p_id for update;
+  if not found then raise exception 'commande_introuvable'; end if;
+
+  if p_status = 'livree' and v_old <> 'livree' then
+    for r in select l->>'id' as pid, max(l->>'label') as label, sum((l->>'qty')::int)::int as need
+               from jsonb_array_elements(v_lines) l group by 1 loop
+      update public.stock set qty = qty - r.need, updated_at = now()
+       where product_id = r.pid and qty is not null and qty >= r.need;
+      if not found and exists (select 1 from public.stock where product_id = r.pid and qty is not null) then
+        raise exception 'stock_insuffisant:%', r.label;
+      end if;
+    end loop;
+  elsif v_old = 'livree' and p_status <> 'livree' then
+    for r in select l->>'id' as pid, sum((l->>'qty')::int)::int as need
+               from jsonb_array_elements(v_lines) l group by 1 loop
+      update public.stock set qty = qty + r.need, updated_at = now()
+       where product_id = r.pid and qty is not null;
+    end loop;
+  end if;
+
+  update public.quote_requests
+     set order_status = p_status, status = case when p_status = 'nouvelle' then 'nouveau' else 'traite' end
+   where id = p_id;
+end;
+$$;
+revoke all on function public.admin_set_order_status(uuid, text) from public;
+grant execute on function public.admin_set_order_status(uuid, text) to authenticated;
 
 -- ---------- Qamar : les demandes du gérant aux développeurs ----------
 create table if not exists public.dev_requests (
