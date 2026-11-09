@@ -290,6 +290,39 @@ $$;
 revoke all on function public.admin_events(int) from public;
 grant execute on function public.admin_events(int) to authenticated;
 
+-- ---------- Boutique : les produits gérés depuis l'espace gérant ----------
+create table if not exists public.products (
+  id text primary key,
+  position int not null default 0,
+  data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.products enable row level security;
+drop policy if exists "tout le monde voit la boutique" on public.products;
+create policy "tout le monde voit la boutique" on public.products for select using (true);
+drop policy if exists "garage gère la boutique" on public.products;
+create policy "garage gère la boutique" on public.products
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- ---------- Qamar : les demandes du gérant aux développeurs ----------
+create table if not exists public.dev_requests (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  status text not null default 'recue' check (status in ('recue', 'en_cours', 'terminee')),
+  kind text not null check (kind in ('demande', 'amelioration', 'probleme')),
+  priority text not null check (priority in ('basse', 'normale', 'haute', 'urgente')),
+  page text not null check (length(page) <= 60),
+  description text not null check (length(description) between 8 and 4000),
+  attachment jsonb check (attachment is null or pg_column_size(attachment) < 3000000)
+);
+create index if not exists dev_requests_created_idx on public.dev_requests (created_at desc);
+alter table public.dev_requests enable row level security;
+drop policy if exists "garage lit ses demandes" on public.dev_requests;
+create policy "garage lit ses demandes" on public.dev_requests for select using (public.is_admin());
+drop policy if exists "garage envoie ses demandes" on public.dev_requests;
+create policy "garage envoie ses demandes" on public.dev_requests for insert with check (public.is_admin() and status = 'recue');
+-- Le statut (recue, en_cours, terminee) est changé par les développeurs depuis Supabase > Table Editor.
+
 -- ---------- Effacement automatique (durées annoncées sur la page « Vos données ») ----------
 create or replace function public.purge_old_data()
 returns void

@@ -1,5 +1,6 @@
 // Catalogue de la boutique pneus.
-// À METTRE À JOUR PAR LE GARAGE : prix indicatifs TTC par pneu, dans la taille de référence indiquée,
+// Catalogue de départ : le gérant le modifie ensuite depuis l'espace gérant, onglet Boutique.
+// Prix indicatifs TTC par pneu, dans la taille de référence indiquée,
 // montage, équilibrage et valves inclus. Le prix exact est confirmé au client avant la pose.
 
 export const CATEGORIES = [
@@ -12,7 +13,7 @@ export const CATEGORIES = [
   { id: "occasion", code: "#bdb7aa", label: "Occasion", accent: "#8a4dff", pattern: null, paint: "#ece8df", season: "Été", pitch: "Grandes marques peu usées, testées par une entreprise agréée et garanties." },
 ];
 
-export const PRODUCTS = [
+export const BASE_PRODUCTS = [
   { id: "primacy-4p", brand: "Michelin", model: "Primacy 4+", cat: "ete", size: "205/55 R16 91V", price: 109, tags: ["Confort", "Longévité"], desc: "Un pneu été calme et durable, pensé pour les trajets du quotidien et les longues distances." },
   { id: "premiumcontact-7", brand: "Continental", model: "PremiumContact 7", cat: "ete", size: "205/55 R16 91V", price: 104, tags: ["Freinage", "Polyvalent"], desc: "L'équilibre entre précision de conduite et confort, sur le sec comme sous la pluie." },
   { id: "ventus-prime-4", brand: "Hankook", model: "Ventus Prime 4", cat: "ete", size: "205/55 R16 91V", price: 78, tags: ["Qualité-prix"], desc: "Une marque reconnue à prix serré : le bon choix pour une citadine ou une compacte." },
@@ -31,6 +32,22 @@ export const PRODUCTS = [
   { id: "occ-primacy-4", brand: "Michelin", model: "Primacy 4 · occasion", cat: "occasion", size: "205/55 R16 91V", price: 45, tags: ["Usure 10 %", "Garanti"], desc: "Grande marque, peu usée, contrôlée et garantie. Dans la limite des stocks." },
   { id: "occ-ecocontact-6", brand: "Continental", model: "EcoContact 6 · occasion", cat: "occasion", size: "195/65 R15 91H", price: 35, tags: ["Usure 15 %", "Garanti"], desc: "Un pneu économique en carburant, à prix discount. Dans la limite des stocks." },
 ];
+
+// Le catalogue enregistré par le gérant passe avant la liste de départ. S'il ne répond pas vite, la boutique s'affiche quand même.
+async function loadProducts() {
+  try {
+    const saved = await Promise.race([window.BookingAPI?.api.products?.(), new Promise((done) => setTimeout(done, 2500))]);
+    if (Array.isArray(saved) && saved.length) return saved;
+  } catch (e) { /* liste de départ */ }
+  return BASE_PRODUCTS;
+}
+const ALL = await loadProducts();
+export const PRODUCTS = ALL.filter((p) => !p.hidden);
+
+const BASE_IDS = new Set(BASE_PRODUCTS.map((p) => p.id));
+export const photoOf = (p) => (p.image ? { src: p.image }
+  : BASE_IDS.has(p.id) ? { src: `assets/tires/${p.id}.webp?v=1`, small: `assets/tires/${p.id}-480.webp?v=1` }
+  : { src: "assets/tires/generique.svg?v=1" });
 
 export const catOf = (p) => CATEGORIES.find((c) => c.id === p.cat);
 export const priceLabel = (n) => `${n.toLocaleString("fr-FR")} €`;

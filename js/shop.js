@@ -1,6 +1,6 @@
 // Boutique pneus : le défilé 3D, la collection, le panier (réservation, paiement au garage).
 import { initUI, makeSheet, openSheet, parseSize } from "./ui.js?v=6";
-import { CATEGORIES, PRODUCTS, catOf, priceLabel } from "./catalogue.js?v=3";
+import { CATEGORIES, PRODUCTS, catOf, priceLabel, photoOf } from "./catalogue.js?v=4";
 
 initUI();
 const $ = (id) => document.getElementById(id);
@@ -16,8 +16,13 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } },
 };
 const byId = new Map(PRODUCTS.map((p) => [p.id, p]));
+// Un produit retiré par le garage disparaît aussi des paniers déjà commencés.
+store.set("pp-cart", store.get("pp-cart", []).filter((it) => byId.has(it.id)));
 // Photos de pneus déjà calculées : aucune 3D à fabriquer pour afficher la collection.
-const imgFor = (p) => `<img src="assets/tires/${p.id}.webp?v=1" srcset="assets/tires/${p.id}-480.webp?v=1 480w, assets/tires/${p.id}.webp?v=1 800w" sizes="(max-width: 760px) 46vw, 50vw" alt="Pneu ${esc(p.brand)} ${esc(p.model)}" width="800" height="600" loading="lazy" decoding="async">`;
+const imgFor = (p) => {
+  const ph = photoOf(p), set = ph.small ? ` srcset="${ph.small} 480w, ${ph.src} 800w" sizes="(max-width: 760px) 46vw, 50vw"` : "";
+  return `<img src="${esc(ph.src)}"${set} alt="Pneu ${esc(p.brand)} ${esc(p.model)}" width="800" height="600" loading="lazy" decoding="async">`;
+};
 const whenIdle = (f) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 800 }) : setTimeout(f, 60));
 
 /* ---------------- Dimension recherchée ---------------- */
@@ -123,7 +128,7 @@ $("finder-result").addEventListener("click", (e) => { const q = e.target.closest
 /* ---------------- Filtres ---------------- */
 let filter = "all", list = PRODUCTS.slice(), index = 0;
 const FILTER_ORDER = ["ete", "hiver", "4saisons", "sport", "competition", "drift", "occasion"];
-const FILTERS = [{ id: "all", label: "Tout", pitch: "Tous nos pneus en vitrine, neufs et d'occasion." }, ...FILTER_ORDER.map((id) => CATEGORIES.find((c) => c.id === id))];
+const FILTERS = [{ id: "all", label: "Tout", pitch: "Tous nos pneus en vitrine, neufs et d'occasion." }, ...FILTER_ORDER.map((id) => CATEGORIES.find((c) => c.id === id)).filter((c) => PRODUCTS.some((p) => p.cat === c.id))];
 const countOf = (id) => (id === "all" ? PRODUCTS.length : PRODUCTS.filter((p) => p.cat === id).length);
 function renderFilters() {
   const dot = (c) => (c.code ? `<i style="--c:${c.code}"></i>` : "");
@@ -466,7 +471,7 @@ let stage = null;
 // Arrivée depuis l'accueil avec une catégorie déjà choisie : pneus.html?cat=occasion
 {
   const wanted = new URLSearchParams(location.search).get("cat");
-  if (CATEGORIES.some((c) => c.id === wanted)) { filter = wanted; list = PRODUCTS.filter((p) => p.cat === wanted); }
+  if (PRODUCTS.some((p) => p.cat === wanted)) { filter = wanted; list = PRODUCTS.filter((p) => p.cat === wanted); }
 }
 showSizeMsg(); renderQuick(); renderFilters(); renderList(); renderGrid(); show(0, 1, true);
 if (root.classList.contains("gl")) {

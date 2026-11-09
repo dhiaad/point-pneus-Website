@@ -1,0 +1,121 @@
+/* Qamar, « lune » en arabe : une nuit de pleine lune derrière deux blocs simples. */
+html:has(body.q-night) { background: #07060f; color-scheme: dark; }
+.dash.q-night {
+  --bg: #07060f; --card: rgba(14, 12, 28, 0.66); --ink: #f3eff9; --ink-2: #c3bcd4; --ink-3: #aaa2bf;
+  --line: rgba(255, 255, 255, 0.11); --line-2: rgba(255, 255, 255, 0.24); --accent: #8a55ff; --accent-ink: #9d70ff;
+  background: var(--bg);
+}
+.q-night .d-top { position: relative; z-index: 2; }
+.q-night .d-main { max-width: none; padding: 0; }
+
+.q-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, #06050e 0%, #0d0b20 34%, #1c1740 66%, #352c60 100%); }
+.q-stars { position: absolute; left: 0; top: 0; width: 100%; height: 76vh; object-fit: cover; }
+.q-twinkle i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fffaf0; box-shadow: 0 0 5px 1px rgba(222, 212, 255, 0.7); animation: q-twinkle 6s ease-in-out infinite; }
+@keyframes q-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+.q-moon-box { position: absolute; left: 62%; top: clamp(8px, 2.6vh, 34px); width: clamp(170px, 19vw, 280px); aspect-ratio: 1; transform: translateX(-50%); }
+.q-moon-box canvas { position: relative; display: block; width: 100%; height: 100%; }
+.q-halo { position: absolute; inset: -62%; border-radius: 50%; background: radial-gradient(closest-side, rgba(238, 228, 255, 0.34) 34%, rgba(186, 164, 255, 0.13) 56%, rgba(150, 120, 255, 0) 100%); animation: q-halo 12s ease-in-out infinite; }
+@keyframes q-halo { 0%, 38%, 90%, 100% { opacity: 0.74; } 58%, 74% { opacity: 1; } }
+
+/* Les nuages : deux bandes identiques qui se suivent, la boucle ne se voit pas. */
+.q-cl { position: absolute; left: 0; display: flex; width: max(200vw, 2800px); animation: q-drift linear infinite; will-change: transform; }
+.q-cl canvas { width: 50%; height: 100%; display: block; }
+.q-cl-back { top: 2vh; height: 42vh; animation-duration: 340s; }
+.q-cl-front { top: 15vh; height: 40vh; animation-duration: 210s; }
+@keyframes q-drift { to { transform: translate3d(-50%, 0, 0); } }
+
+.q-land { position: absolute; left: 0; right: 0; bottom: 0; display: block; width: 100%; height: clamp(250px, 42vh, 470px); }
+.q-land-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 26vh; background: linear-gradient(180deg, rgba(7, 6, 15, 0), rgba(7, 6, 15, 0.42)); }
+
+/* Le loup hurle à la lune toutes les douze secondes. */
+.w-head { transform-origin: 10px -116px; animation: w-head 12s cubic-bezier(0.45, 0, 0.4, 1) infinite; }
+.w-jaw { transform-origin: 26px -168px; animation: w-jaw 12s ease-in-out infinite; }
+.w-tail { transform-origin: -62px -12px; animation: w-tail 6s ease-in-out infinite; }
+.w-chest { transform-origin: 8px -60px; animation: w-chest 12s ease-in-out infinite; }
+@keyframes w-head { 0%, 30% { transform: rotate(38deg); } 44%, 76% { transform: rotate(0deg); } 58% { transform: rotate(-3deg); } 90%, 100% { transform: rotate(38deg); } }
+@keyframes w-jaw { 0%, 42% { transform: rotate(0deg); } 50%, 72% { transform: rotate(13deg); } 80%, 100% { transform: rotate(0deg); } }
+@keyframes w-tail { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-4deg); } }
+@keyframes w-chest { 0%, 40%, 80%, 100% { transform: scale(1); } 60% { transform: scale(1.03); } }
+.w-wave { fill: none; stroke: #e9e1ff; stroke-width: 2.4; stroke-linecap: round; opacity: 0; transform-origin: 46px -208px; animation: w-wave 12s ease-out infinite; }
+.w-wave.w2 { animation-delay: 0.7s; }
+.w-wave.w3 { animation-delay: 1.4s; }
+@keyframes w-wave { 0%, 45% { opacity: 0; transform: scale(0.45); } 50% { opacity: 0.7; } 64%, 100% { opacity: 0; transform: scale(1.9); } }
+
+.q-wrap { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 4px 24px clamp(190px, 30vh, 340px); }
+.q-head { display: grid; gap: 2px; min-height: 112px; align-content: center; padding-bottom: 14px; }
+.q-head h1 { display: flex; align-items: baseline; gap: 14px; font-size: clamp(38px, 4.4vw, 56px); font-weight: 600; line-height: 1.05; letter-spacing: -0.015em; }
+.q-head h1 span { font-size: 0.68em; font-weight: 400; color: var(--ink-2); letter-spacing: 0; }
+.q-head p { max-width: 46ch; color: var(--ink-2); font-size: 16px; }
+.q-head .q-demo { color: #ffe6a6; font-size: 14px; }
+
+.q-grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.q-card { display: grid; align-content: start; gap: 14px; padding: 20px; border-radius: 18px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); min-width: 0; }
+.q-card h2 { font-size: 20px; font-weight: 600; }
+.q-card-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.q-card-h p { color: var(--ink-2); font-size: 14px; }
+
+.q-f { display: grid; gap: 6px; min-width: 0; border: 0; padding: 0; margin: 0; }
+.q-f > span, .q-f legend { padding: 0; font-size: 13.5px; color: var(--ink-2); }
+.q-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.q-seg { display: flex; gap: 3px; padding: 3px; border-radius: 11px; background: rgba(255, 255, 255, 0.07); }
+.q-seg label { flex: 1 1 0; min-width: 0; cursor: pointer; }
+.q-seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.q-seg span { display: grid; place-items: center; min-height: 36px; padding: 0 4px; border-radius: 8px; color: var(--ink-2); font-size: 13.5px; font-weight: 500; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+.q-seg label:hover span { color: var(--ink); }
+.q-seg input:checked + span { background: #f3eff9; color: #17132b; font-weight: 600; }
+.q-seg input:focus-visible + span { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.q-f select, .q-f textarea { width: 100%; padding: 9px 12px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.07); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); font: inherit; }
+.q-f select { min-height: 42px; }
+.q-f select option { background: #17132b; color: #f3eff9; }
+.q-f textarea { min-height: 92px; resize: vertical; line-height: 1.45; }
+.q-f textarea::placeholder { color: var(--ink-3); }
+.q-f select:focus, .q-f textarea:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--accent-ink); }
+.q-drop { display: flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 12px; border-radius: 10px; color: var(--ink-2); font-size: 14px; text-align: center; cursor: pointer; box-shadow: inset 0 0 0 1px var(--line-2); transition: background 0.15s, color 0.15s; }
+.q-drop:hover, .q-drop.over { background: rgba(255, 255, 255, 0.07); color: var(--ink); }
+.q-drop:focus-within { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.q-drop input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.q-file-view { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 5px 12px 5px 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.07); font-size: 14px; }
+.q-file-view[hidden] { display: none; }
+.q-file-view img { width: 44px; height: 32px; object-fit: cover; border-radius: 6px; }
+.q-file-view [data-name] { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-send { justify-self: start; min-height: 44px; padding: 0 22px; }
+.q-err { color: #ffb3a8; font-size: 14px; }
+.q-ok { color: #b5ecc9; font-size: 14px; }
+.q-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+
+.q-list { display: grid; gap: 8px; max-height: 408px; overflow-y: auto; margin-right: -8px; padding-right: 8px; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.24) transparent; }
+.q-item { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: rgba(255, 255, 255, 0.055); }
+.q-item.fresh { animation: q-fresh 2.4s ease-out; }
+@keyframes q-fresh { from { background: rgba(160, 128, 255, 0.4); } }
+.q-item-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--ink-3); font-size: 13px; }
+.q-st { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); font-size: 13.5px; font-weight: 500; }
+.q-st svg { width: 16px; height: 16px; }
+.q-st .m-b { fill: rgba(255, 255, 255, 0.13); }
+.q-st .m-f { fill: #f1e8cf; }
+.q-item-t { font-weight: 600; font-size: 15px; }
+.q-item-d { color: var(--ink-2); font-size: 14px; white-space: pre-line; overflow-wrap: anywhere; }
+.q-item-d.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.q-more { justify-self: start; padding: 0; border: 0; background: none; color: var(--ink); font-size: 13.5px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.q-item-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 2px; color: var(--ink-3); font-size: 13px; }
+.q-pri.p-haute, .q-pri.p-urgente { color: #ffd98a; }
+.q-thumb { width: 52px; height: 36px; padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: none; cursor: zoom-in; }
+.q-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.q-thumb.big { width: 100%; height: auto; cursor: zoom-out; }
+.q-thumb.big img { height: auto; object-fit: contain; }
+.q-pdf { color: var(--ink); overflow-wrap: anywhere; }
+.q-empty { padding: 38px 16px; color: var(--ink-2); text-align: center; }
+
+@media (max-width: 860px) {
+  .q-moon-box { left: 76%; top: 114px; width: 148px; }
+  .q-wrap { padding-inline: 16px; }
+  .q-head { min-height: 170px; align-content: start; padding-top: 16px; }
+  .q-head p { max-width: 20ch; }
+  .q-grid { grid-template-columns: minmax(0, 1fr); }
+  .q-list { max-height: none; overflow: visible; margin-right: 0; padding-right: 0; }
+}
+@media (max-width: 460px) { .q-two { grid-template-columns: minmax(0, 1fr); } .q-seg span { font-size: 13px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .q-cl, .q-halo, .q-twinkle i, .w-head, .w-jaw, .w-tail, .w-chest, .w-wave, .q-item.fresh { animation: none; }
+}

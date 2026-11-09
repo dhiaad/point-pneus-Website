@@ -10,6 +10,7 @@ const range = (p, a, b) => clamp01((p - a) / (b - a));
 const lerp = (a, b, t) => a + (b - a) * t;
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeSine = (t) => (1 - Math.cos(Math.PI * t)) / 2;   // départ et arrivée très doux
 const mobile = false; // La 3D ne tourne qu'au-delà de 900 px : les téléphones ont les images fixes.
 const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
 const motion = root.classList.contains("motion");
@@ -464,24 +465,21 @@ async function startMotion() {
   }
 
   // Avancement lissé : la voiture glisse au lieu de suivre chaque cran de molette.
-  let sp = 0, done = false, lastSp = -1, lastPlaced = -1, collapsed = false;
+  // Même lancé d'un coup de molette, le trajet complet prend au moins quatre secondes.
+  const DRIVE_MAX_SPEED = 0.24, DRIVE_DWELL = 0.92;
+  let sp = 0, lastSp = -1, lastPlaced = -1, collapsed = false;
   let samples = 0, sampleTime = 0, lowered = false;
 
-  // Une fois l'animation vue, la section reprend la hauteur d'un écran : remonter redevient immédiat.
-  function collapseDrive(hold) {
+  // Une fois la section quittée, elle reprend la hauteur d'un écran : remonter redevient immédiat.
+  // Le repli a lieu hors de l'écran : le visiteur ne voit ni saut, ni molette bloquée.
+  function collapseDrive() {
     if (collapsed || forced) return;
-    collapsed = true; done = true;
+    collapsed = true;
     const y = scrollY, top = drive.getBoundingClientRect().top + y;
     const total = drive.offsetHeight - innerHeight;
     const delta = Math.max(0, Math.min(y - top, total));
     root.classList.add("drive-done");
     scrollTo({ top: y - delta, behavior: "instant" });
-    if (hold && delta > 0) {
-      // L'élan de la molette ne doit pas emporter le visiteur au-delà du plan qui vient de s'ouvrir.
-      const stop = (ev) => ev.preventDefault();
-      addEventListener("wheel", stop, { passive: false });
-      setTimeout(() => removeEventListener("wheel", stop), 380);
-    }
     dirty = true;
   }
   finishDrive = collapseDrive;
@@ -496,16 +494,18 @@ async function startMotion() {
 
   function updateDrive(dt) {
     const { p, visible, past } = sectionProgress(drive);
-    if (past && !collapsed) collapseDrive(false);
+    if (past && !collapsed) collapseDrive();
     if (!visible && !forced) return;
     startCarLoad();
-    sp += (p - sp) * (1 - Math.exp(-dt * 13));
-    if (Math.abs(p - sp) < 0.0004) sp = p;
-    if (sp >= 0.96) done = true;
-    if (done && !collapsed && sp >= 0.96) collapseDrive(true);
-    const e = done ? 1 : sp;
+    // Rien ne bouge avant que la voiture soit prête : elle entre toujours par le bas de l'écran, jamais d'un coup au milieu.
+    const goal = carState.ready ? clamp01(p / DRIVE_DWELL) : 0;
+    const eased = (goal - sp) * (1 - Math.exp(-dt * 4.5));
+    const maxStep = DRIVE_MAX_SPEED * dt;
+    sp += Math.max(-maxStep, Math.min(maxStep, eased));
+    if (forced || Math.abs(goal - sp) < 0.0004) sp = goal;
+    const e = collapsed ? 1 : sp;
     // La zone choisie monte en lumière, l'ancienne s'éteint.
-    const planOn = range(e, 0.78, 0.88) > 0.5;
+    const planOn = range(e, 0.82, 0.9) > 0.5;
     for (const [z, zone] of Object.entries(carState.lit)) {
       const target = planOn && z === atelier.current ? 1 : 0;
       if (Math.abs(target - zone.level) > 0.004) { zone.level += (target - zone.level) * (1 - Math.exp(-dt * 11)); dirty = true; }
@@ -523,17 +523,17 @@ async function startMotion() {
     const moved = Math.abs(e - lastSp) >= 0.0002;
     lastSp = e; dirty = false;
 
-    const titleOp = (1 - range(e, 0.4, 0.5)).toFixed(3), coOp = range(e, 0.78, 0.88).toFixed(2);
+    const titleOp = (1 - range(e, 0.44, 0.54)).toFixed(3), coOp = range(e, 0.82, 0.9).toFixed(2);
     setOp(titleEl, titleOp); setOp(subEl, titleOp); setOp(headEl, coOp); setOp(apEl, coOp);
-    const wipe = easeInOut(range(e, 0.46, 0.76));
+    const wipe = easeInOut(range(e, 0.5, 0.78));
     driveStage.classList.toggle("ap-on", planOn);
     if (!carState.ready) { carRenderer.clear(); return; }
 
     const L = carState.length, car = carState.car;
     const centerZ = mobile ? -halfH * 0.2 : 0;
-    const enter = easeOut(range(e, 0, 0.32));
+    const enter = easeSine(range(e, 0.015, 0.4));
     car.position.z = lerp(halfH + L * 0.62, centerZ, enter);
-    car.position.x = lerp(Math.sin(enter * Math.PI) * 0.18, layout.shift, easeInOut(range(e, 0.66, 0.86)));
+    car.position.x = lerp(Math.sin(enter * Math.PI) * 0.18, layout.shift, easeInOut(range(e, 0.7, 0.88)));
     car.rotation.y = Math.sin(enter * Math.PI) * -0.05 * (1 - enter * 0.6);
     const zc = car.position.z + lerp(-L / 2 - 0.25, L / 2 + 0.25, wipe);
     clipCar.constant = -zc;
@@ -541,7 +541,7 @@ async function startMotion() {
     carState.lines.visible = wipe > 0;
     carState.model.visible = wipe < 1;           // la voiture pleine n'est plus dessinée une fois le plan complet
     carState.glows.forEach((g) => { g.visible = wipe > 0; g.material.opacity = g.userData.op; });
-    if (carState.trails) carState.trails.set(easeOut(range(e, 0.74, 0.92)));
+    if (carState.trails) carState.trails.set(easeOut(range(e, 0.78, 0.93)));
     const scanOn = wipe > 0 && wipe < 1;
     if (scanOn) { tmp.set(0, 0, zc).project(carCam); scanEl.style.transform = `translateY(${((1 - tmp.y) / 2 * stageH).toFixed(1)}px)`; }
     const scanOp = scanOn ? Math.sin(Math.PI * wipe).toFixed(2) : "0";
@@ -555,8 +555,8 @@ async function startMotion() {
         samples = 0; sampleTime = 0;
       }
     }
-    if (e >= 0.76 && (Math.abs(e - lastPlaced) > 0.0002 || placeDirty)) {
-      placeCallouts(callouts.map((_, i) => range(e, 0.78 + i * 0.018, 0.84 + i * 0.018)));
+    if (e >= 0.8 && (Math.abs(e - lastPlaced) > 0.0002 || placeDirty)) {
+      placeCallouts(callouts.map((_, i) => range(e, 0.82 + i * 0.012, 0.87 + i * 0.012)));
       lastPlaced = e; placeDirty = false;
     }
   }

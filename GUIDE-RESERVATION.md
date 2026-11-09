@@ -78,21 +78,27 @@ Puis **Edge Functions** > **Secrets**, ajouter :
 | `SITE_URL` | `https://www.point-pneus-guerido.com` |
 | `ALLOWED_ORIGIN` | `https://www.point-pneus-guerido.com` |
 | `PLATE_API_URL`, `PLATE_API_KEY` | voir étape 6 |
+| `DEV_EMAIL` | l'adresse des développeurs, qui reçoit les demandes envoyées depuis Qamar |
 
 ## 5. Brancher les alertes
 
-Supabase > **Database** > **Webhooks** > **Create a new hook**, deux fois :
+Supabase > **Database** > **Webhooks** > **Create a new hook**, trois fois :
 
 1. Table `bookings`, événements **Insert** et **Update**.
 2. Table `quote_requests`, événement **Insert**.
+3. Table `dev_requests`, événement **Insert**.
 
-Pour les deux : type *Supabase Edge Functions*, fonction `notify`, et un en-tête
+Pour les trois : type *Supabase Edge Functions*, fonction `notify`, et un en-tête
 `Authorization` = `Bearer <le WEBHOOK_SECRET>`.
 
 Résultat :
 - nouveau rendez-vous : e-mail (et SMS) au garage, accusé de réception au client ;
 - le garage confirme ou annule dans l'espace garage : le client reçoit un e-mail ;
-- nouvelle demande de devis : e-mail (et SMS) au garage.
+- nouvelle demande de devis : e-mail (et SMS) au garage ;
+- nouvelle demande dans Qamar : e-mail aux développeurs.
+
+Pour faire avancer une demande Qamar, changer sa colonne `status` dans Supabase >
+**Table Editor** > `dev_requests` : le gérant voit le nouveau statut dans son suivi.
 
 ## 6. API de plaque d'immatriculation
 
@@ -154,6 +160,6 @@ Les données sont effacées automatiquement selon les durées de la page `confid
 
 1. Dans le Manager OVH, activez le certificat SSL du domaine **avant** d'envoyer le fichier `.htaccess` : c'est lui qui force le HTTPS.
 2. Envoyez le site sans `supabase/`, `graphify-out/`, `.git/`, `.claude/` ni les fichiers `GUIDE-*.md`.
-3. Si la base Supabase existe déjà, relancez `supabase/schema.sql` : il crée la mesure des visites (`site_events`, `track_event`, `admin_events`) et les plafonds anti-spam. Il peut être relancé sans perdre les données.
+3. Si la base Supabase existe déjà, relancez `supabase/schema.sql` : il crée la mesure des visites (`site_events`, `track_event`, `admin_events`), les plafonds anti-spam, les produits de la boutique (`products`) et les demandes Qamar (`dev_requests`). Il peut être relancé sans perdre les données.
 4. Les clés privées (fournisseur de plaques, Brevo, `service_role`) vont uniquement dans les secrets des Edge Functions Supabase. Seules `supabaseUrl` et la clé publique `anon` vont dans `booking-config.js`.
 5. Une fois en ligne, déclarez `https://www.point-pneus-guerido.com/sitemap.xml` dans Google Search Console.
