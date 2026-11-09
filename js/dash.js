@@ -46,7 +46,7 @@ function route() {
   shownView = v;
   if (v === "tableau" && chartData.length) drawChart(chartData);
   if (v === "boutique") import("./admin-shop.js?v=1").then((m) => m.openShopAdmin());
-  if (v === "qamar") import("./qamar.js?v=3").then((m) => m.openQamar());
+  if (v === "qamar") import("./qamar.js?v=4").then((m) => m.openQamar());
 }
 addEventListener("hashchange", route);
 

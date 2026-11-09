@@ -48,9 +48,9 @@ function paintMoon(c) {
   }
   // Deux passages en tout petit puis en grand : les bords des mers deviennent flous sans filtre, sur tous les navigateurs.
   const shrink = (src, size) => { const c2 = document.createElement("canvas"); c2.width = c2.height = size; const x = c2.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(src, 0, 0, size, size); return c2; };
-  const soft = shrink(shrink(shrink(seas, Math.round(S / 12)), Math.round(S / 4)), Math.round(S / 2));
+  const soft = shrink(shrink(shrink(shrink(seas, Math.round(S / 22)), Math.round(S / 10)), Math.round(S / 4)), Math.round(S / 2));
   g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
-  g.globalAlpha = 0.54; g.drawImage(soft, 0, 0, S, S);
+  g.globalAlpha = 0.62; g.drawImage(soft, 0, 0, S, S);
   g.globalAlpha = 1;
   // Grain des hauts plateaux
   for (let i = 0; i < 2600; i++) {
