@@ -390,17 +390,28 @@ async function startMotion() {
     Object.assign(carState, { car: res.car, model: res.model, length: res.length, width: Math.min(res.width, 2.35), lines: bp.lines });
     sizeCar();
     await quiet();
-    // Shaders, formes et textures partent vers la carte graphique avant que la voiture n'arrive : pas d'à-coup au premier passage.
-    if (carRenderer.compileAsync) await carRenderer.compileAsync(carScene, carCam).catch(() => {});
-    await quiet();
-    const warm = new THREE.WebGLRenderTarget(32, 32);
+    // Shaders et textures partent vers la carte graphique avant que la voiture n'arrive. Il faut passer par le vrai
+    // canvas : sur une cible cachée, le rendu des couleurs diffère et rien de ce qui est préparé ne resservirait.
+    // Une matière à la fois pour ne pas bloquer la page ; chaque essai est effacé avant d'être affiché.
+    const objects = [], materials = new Map();
+    carScene.traverse((o) => {
+      objects.push([o, o.visible, o.frustumCulled]);
+      o.frustumCulled = false;
+      [o.material].flat().forEach((m) => { if (m) materials.set(m, m.visible); });
+    });
     clipCar.constant = clipPlan.constant = 1e4;
-    carState.glows.forEach((g) => { g.visible = true; });
-    carState.lines.visible = true;
-    carRenderer.setRenderTarget(warm);
-    carRenderer.render(carScene, carCam);
-    carRenderer.setRenderTarget(null);
-    warm.dispose();
+    for (const m of materials.keys()) m.visible = false;
+    for (const [m, was] of materials) {
+      if (!was) continue;
+      m.visible = true;
+      objects.forEach(([o]) => { o.visible = true; });
+      carRenderer.render(carScene, carCam);
+      carRenderer.clear();
+      m.visible = false;
+      await new Promise((done) => setTimeout(done, 0));
+    }
+    for (const [m, was] of materials) m.visible = was;
+    objects.forEach(([o, seen, culled]) => { o.visible = seen; o.frustumCulled = culled; });
     clipCar.constant = clipPlan.constant = 0;
     carState.ready = true; dirty = true;
   };
@@ -464,14 +475,21 @@ async function startMotion() {
     });
   }
 
-  // Avancement lissé : la voiture glisse au lieu de suivre chaque cran de molette.
-  // Même lancé d'un coup de molette, le trajet complet prend au moins quatre secondes.
-  const DRIVE_MAX_SPEED = 0.24, DRIVE_DWELL = 0.92;
-  let sp = 0, lastSp = -1, lastPlaced = -1, collapsed = false;
+  // La voiture suit le défilement : c'est la longueur de la section qui la rend lente, pas un minuteur.
+  // Le lissage garde une vitesse continue et ne la laisse jamais à plus de 12 % derrière la position réelle.
+  const DRIVE_SMOOTH = 0.2, DRIVE_MAX_LAG = 0.12, DRIVE_DWELL = 0.86;
+  let sp = 0, spV = 0, lastSp = -1, lastPlaced = -1, collapsed = false;
   let samples = 0, sampleTime = 0, lowered = false;
+  function glide(goal, dt) {
+    const w = 2 / DRIVE_SMOOTH, x = w * dt, k = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+    const change = Math.max(-DRIVE_MAX_LAG, Math.min(DRIVE_MAX_LAG, sp - goal));
+    const temp = (spV + w * change) * dt;
+    spV = (spV - w * temp) * k;
+    const next = sp - change + (change + temp) * k;
+    if ((goal > sp) === (next > goal)) { sp = goal; spV = 0; } else sp = next;
+  }
 
-  // Une fois la section quittée, elle reprend la hauteur d'un écran : remonter redevient immédiat.
-  // Le repli a lieu hors de l'écran : le visiteur ne voit ni saut, ni molette bloquée.
+  // Seul un lien du menu replie la section : au défilement, rien ne touche à la position de la page.
   function collapseDrive() {
     if (collapsed || forced) return;
     collapsed = true;
@@ -493,16 +511,14 @@ async function startMotion() {
   let flowClock = 0;
 
   function updateDrive(dt) {
-    const { p, visible, past } = sectionProgress(drive);
-    if (past && !collapsed) collapseDrive();
-    if (!visible && !forced) return;
-    startCarLoad();
+    const { p, visible } = sectionProgress(drive);
     // Rien ne bouge avant que la voiture soit prête : elle entre toujours par le bas de l'écran, jamais d'un coup au milieu.
     const goal = carState.ready ? clamp01(p / DRIVE_DWELL) : 0;
-    const eased = (goal - sp) * (1 - Math.exp(-dt * 4.5));
-    const maxStep = DRIVE_MAX_SPEED * dt;
-    sp += Math.max(-maxStep, Math.min(maxStep, eased));
-    if (forced || Math.abs(goal - sp) < 0.0004) sp = goal;
+    // Hors de l'écran, l'état se cale sans animation : en revenant d'en bas, le plan est déjà là.
+    if (!visible && !forced) { sp = goal; spV = 0; return; }
+    startCarLoad();
+    glide(goal, dt);
+    if (forced || (Math.abs(goal - sp) < 0.0004 && Math.abs(spV) < 0.002)) { sp = goal; spV = 0; }
     const e = collapsed ? 1 : sp;
     // La zone choisie monte en lumière, l'ancienne s'éteint.
     const planOn = range(e, 0.82, 0.9) > 0.5;
@@ -533,8 +549,7 @@ async function startMotion() {
     const centerZ = mobile ? -halfH * 0.2 : 0;
     const enter = easeSine(range(e, 0.015, 0.4));
     car.position.z = lerp(halfH + L * 0.62, centerZ, enter);
-    car.position.x = lerp(Math.sin(enter * Math.PI) * 0.18, layout.shift, easeInOut(range(e, 0.7, 0.88)));
-    car.rotation.y = Math.sin(enter * Math.PI) * -0.05 * (1 - enter * 0.6);
+    car.position.x = lerp(0, layout.shift, easeInOut(range(e, 0.7, 0.88)));
     const zc = car.position.z + lerp(-L / 2 - 0.25, L / 2 + 0.25, wipe);
     clipCar.constant = -zc;
     clipPlan.constant = zc;
@@ -551,7 +566,7 @@ async function startMotion() {
     if (!lowered && moved && carState.ready) {
       samples++; sampleTime += dt;
       if (samples >= 24) {
-        if (sampleTime / samples > 0.024) { lowered = true; carRenderer.setPixelRatio(1); sizeCar(); carRenderer.render(carScene, carCam); }
+        if (sampleTime / samples > 0.034) { lowered = true; carRenderer.setPixelRatio(1); sizeCar(); carRenderer.render(carScene, carCam); }
         samples = 0; sampleTime = 0;
       }
     }
